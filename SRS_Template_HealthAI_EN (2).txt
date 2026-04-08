@@ -1,0 +1,308 @@
+Software Requirements Specification
+(SRS)
+
+
+
+Project Name
+HEALTH AI Co-Creation & Innovation Platform
+Course
+[Course Name and Code]
+Group No / Name
+[Group number or name]
+Group Members
+[Full Name – Student ID]
+Submission Date
+[DD/MM/YYYY]
+Version
+1.0
+Revision History
+Date
+Version
+Change Description
+Author
+[DD/MM/YYYY]
+1.0
+Initial version
+[Full Name]
+ 
+ 
+ 
+ 
+
+Table of Contents
+Table of Contents	2
+1. Introduction	3
+1.1 Purpose	3
+1.2 Scope	3
+1.3 Definitions and Abbreviations	3
+1.4 Intended Audience	3
+2. Overall Description	3
+2.1 Product Perspective	3
+2.2 User Roles	3
+2.3 Assumptions and Dependencies	3
+2.4 Constraints	3
+3. Functional Requirements	3
+3.1 User Registration & Access Control	4
+3.2 Post Management	4
+3.3 Search & Matching	4
+3.4 Meeting Request Workflow	4
+3.5 Administrative Dashboard	4
+3.6 Activity Logging & Audit Trail	4
+4. Non-Functional Requirements	4
+5. Use Cases	5
+5.1 UC-01: Engineer Creates a Post	5
+5.2 UC-02: [Use Case Name]	5
+5.3 UC-03: [Use Case Name]	5
+6. Data Model	6
+7. Interface Requirements	6
+7.1 User Interface (UI)	6
+7.2 External System Interfaces	6
+8. Requirements Traceability Matrix	6
+9. Appendices 	6
+
+(Right-click and select “Update Field” in Word to refresh)
+
+1. Introduction
+1.1 Purpose
+Briefly describe the purpose of this document. State which system this SRS is being prepared for.
+1.2 Scope
+Summarize what the system does and what it does not do in 2–3 sentences. For example: “The platform enables structured partner discovery between healthcare professionals and engineers. It does not provide financial transactions, contract management, or medical advice.”
+1.3 Definitions and Abbreviations
+Define the technical terms and abbreviations used in this document. Examples: SRS, RBAC, GDPR, NDA, WCAG, etc.
+1.4 Intended Audience
+Identify who will read this document (development team, course instructor, etc.).
+2. Overall Description
+2.1 Product Perspective
+Explain the need that the system addresses and the problem in current processes. Refer to the “Project Purpose” section of the project brief.
+2.2 User Roles
+Describe the user roles in the system and the key responsibilities of each.
+Role
+Description
+Key Permissions
+Engineer
+[Describe]
+[List permissions]
+Healthcare Professional
+[Describe]
+[List permissions]
+Admin
+[Describe]
+[List permissions]
+2.3 Assumptions and Dependencies
+List your assumptions about the system and external dependencies. Example: “It is assumed that users have an institutional .edu email address.”
+2.4 Constraints
+State the factors that constrain the system design. Example: No patient data is stored, no file uploads, meetings take place externally.
+3. Functional Requirements
+Define each functional requirement with a unique ID. Use High / Medium / Low for priority. Reference the relevant project brief section in the Source column.
+3.1 User Registration & Access Control
+ID
+Requirement Description
+Priority
+Source
+FR-01
+The system shall only allow registration with institutional .edu email addresses.
+High
+Brief 4.1
+FR-02
+The system shall implement an email verification mechanism.
+High
+Brief 4.1
+FR-03
+The user shall be able to select a role during registration (Engineer / Healthcare Professional / Admin).
+High
+Brief 4.1
+FR-04
+[Add your own requirements]
+[...]
+[...]
+3.2 Post Management
+ID
+Requirement Description
+Priority
+Source
+FR-10
+[Write requirement]
+[...]
+Brief 4.2
+FR-11
+[Write requirement]
+[...]
+Brief 4.2
+FR-12
+[Write requirement]
+[...]
+Brief 4.2
+Carefully review section 4.2 of the brief to cover all post management requirements. Do not forget the post lifecycle states (Draft, Active, Meeting Scheduled, Partner Found, Expired).
+3.3 Search & Matching
+ID
+Requirement Description
+Priority
+Source
+FR-20
+[Write requirement]
+[...]
+Brief 4.3
+FR-21
+[Write requirement]
+[...]
+Brief 4.3
+3.4 Meeting Request Workflow
+ID
+Requirement Description
+Priority
+Source
+FR-30
+[Write requirement]
+[...]
+Brief 4.4
+FR-31
+[Write requirement]
+[...]
+Brief 4.4
+3.5 Administrative Dashboard
+ID
+Requirement Description
+Priority
+Source
+FR-40
+[Write requirement]
+[...]
+Brief 4.5
+FR-41
+[Write requirement]
+[...]
+Brief 4.5
+3.6 Activity Logging & Audit Trail
+ID
+Requirement Description
+Priority
+Source
+FR-50
+[Write requirement]
+[...]
+Brief 4.6
+FR-51
+[Write requirement]
+[...]
+Brief 4.6
+4. Non-Functional Requirements
+Define the requirements from section 5 of the brief with concrete and measurable metrics.
+ID
+Requirement
+Metric / Target
+Category
+NFR-01
+Search results shall be returned within a specified time.
+< 1.5 seconds
+Performance
+NFR-02
+Page load time shall be limited.
+< 3 seconds
+Performance
+NFR-03
+[Write requirement]
+[Target]
+[Category]
+NFR-04
+[Write requirement]
+[Target]
+[Category]
+NFR-05
+[Write requirement]
+[Target]
+[Category]
+Categories: Performance, Security, GDPR/Privacy, Usability, Accessibility. Cover all of sections 5.1–5.4 of the brief.
+5. Use Cases
+Write at least 3–4 core use cases. Use the format below. Base them on the flows described in sections 3.1 and 3.2 of the brief.
+5.1 UC-01: Engineer Creates a Post
+Name
+UC-01: Engineer Creates a Post
+Actor(s)
+Engineer
+Precondition
+The engineer must be logged in.
+Main Flow
+1. The engineer clicks the “New Post” button. 2. Fills in the required fields (domain, description, required expertise, etc.). 3. Clicks the “Publish” button. 4. The system publishes the post with “Active” status.
+Postcondition
+The post is saved and visible to other users.
+Alternative Flow
+2a. If a required field is left blank, the system displays an error message.
+ 
+5.2 UC-02: [Use Case Name]
+Name
+UC-02: [Use Case Name]
+Actor(s)
+[Actor]
+Precondition
+[Write]
+Main Flow
+[Write steps]
+Postcondition
+[Write]
+Alternative Flow
+[Write]
+ 
+5.3 UC-03: [Use Case Name]
+Name
+UC-03: [Use Case Name]
+Actor(s)
+[Actor]
+Precondition
+[Write]
+Main Flow
+[Write steps]
+Postcondition
+[Write]
+Alternative Flow
+[Write]
+ 
+Add more use cases as needed (UC-04, UC-05, ...). Consider scenarios such as meeting request, admin removing a post, marking partner found.
+6. Data Model
+Show the core data entities of the system and their relationships. You can present this as a simple ER diagram or in table format. Example entities: User, Post, MeetingRequest, ActivityLog.
+Entity
+Key Fields
+Relationships
+User
+[List fields]
+[Write]
+Post
+[List fields]
+[Write]
+MeetingRequest
+[List fields]
+[Write]
+ActivityLog
+[List fields]
+[Write]
+You are encouraged to include a simple ER diagram (visual) in addition to this table.
+7. Interface Requirements
+7.1 User Interface (UI)
+Briefly describe the main screens and page structure. Examples: Registration page, Dashboard, Post creation form, Post detail page, Meeting request screen, Admin panel. Including wireframes or simple screen mockups is recommended.
+7.2 External System Interfaces
+Specify the external services the system will interact with. Example: Email service (for verification), external meeting platforms (Zoom/Teams – link sharing only).
+8. Requirements Traceability Matrix
+Show the source of each requirement in the project brief and which use case it relates to. Ensure all requirements are covered.
+Req. ID
+Requirement Summary
+Source (Brief)
+Related Use Case
+FR-01
+.edu email restriction
+Brief 4.1
+UC-01, UC-02
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+9. Appendices 
+• Use Case Diagram
+• Wireframe / Mockup images
+• ER Diagram

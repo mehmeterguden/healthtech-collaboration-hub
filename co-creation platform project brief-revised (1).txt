@@ -1,0 +1,243 @@
+European HealthTech
+Co-Creation & Innovation Platform
+ 
+Why Structured Co-Creation Matters?
+Why Structured Co-Creation Matters?
+Multidisciplinary innovation in healthcare technology requires rapid, structured access to complementary expertise that currently relies on coincidence or personal networks.
+Multidisciplinary innovation in healthcare technology requires rapid, structured access to complementary expertise that currently relies on coincidence or personal networks.
+
+The Gap We're Addressing
+The Gap We're Addressing
+Engineers developing healthcare technologies require clinical domain knowledge, workflow understanding, validation processes, and ethical approval pathways to transform concepts into viable solutions. Conversely, healthcare professionals frequently generate compelling innovation ideas but lack the engineering competence and technical infrastructure to implement them effectively. The current landscape forces innovators to depend largely on personal networks, an inefficient model that slows innovation and limits potential partnerships to those with existing connections.
+Engineers developing healthcare technologies require clinical domain knowledge, workflow understanding, validation processes, and ethical approval pathways to transform concepts into viable solutions. Conversely, healthcare professionals frequently generate compelling innovation ideas but lack the engineering competence and technical infrastructure to implement them effectively. The current landscape forces innovators to depend largely on personal networks, an inefficient model that slows innovation and limits potential partnerships to those with existing connections.
+
+
+
+
+1. Project Purpose
+Multidisciplinary health-tech innovation requires rapid and structured access to complementary expertise. Engineers developing healthcare technologies require clinical domain knowledge, workflow understanding, validation processes, and ethical approval pathways. Conversely, healthcare professionals often generate strong innovation ideas but lack engineering competence to implement them. Currently, such partnerships depend largely on personal networks or coincidence. 
+The HEALTH AI co-creation platform eliminates randomness in interdisciplinary collaboration by providing:
+	•	Structured announcement-based partner discovery
+	•	Secure first-contact initiation
+	•	Controlled disclosure of ideas
+	•	Transparent meeting workflow
+	•	Clear closure of partner requests
+The objective is to develop a secure, GDPR-compliant web platform that enables structured partner discovery between healthcare professionals and engineers, with usability as the highest priority requirement.
+2. Core Platform Philosophy
+What is it?
+What is it?
+What it is NOT?
+What it is NOT?
+A document repository
+	•	A medical data system
+	•	A project management suite
+	•	A file-sharing service
+	•	A document repository
+	•	A medical data system
+	•	A project management suite
+	•	A file-sharing service
+	•	A secure matchmaking infrastructure
+	•	A structured partner announcement board
+	•	A meeting initiation facilitator
+	•	A trust-based interdisciplinary bridge
+	•	A secure matchmaking infrastructure
+	•	A structured partner announcement board
+	•	A meeting initiation facilitator
+	•	A trust-based interdisciplinary bridge
+
+The system intentionally avoids storing confidential technical material, intellectual property files, or patient data in order to reduce IP theft risks, legal exposure, GDPR risk, and ethical complications.
+HEALTH AI is fundamentally a user experience platform. The system must feel safe, professional, simple, structured, and trustworthy.
+Users must:
+	•	Understand the platform’s purpose within 20 seconds
+	•	Be able to post an announcement without confusion
+3. Core Functional Workflow
+3.1 Engineer-Initiated Flow
+	•	Engineer registers.
+	•	Engineer creates a short structured post (text) that includes:
+	•	Working domain (e.g., cardiology imaging)
+	•	Short explanation
+	•	What kind of healthcare expertise is needed
+	•	Project stage
+	•	Level of commitment required
+	•	High-level idea (without revealing sensitive details)
+	•	Healthcare professionals browse posts.
+	•	Healthcare professional expresses interests via short message.
+	•	Engineer acknowledges the interest suggesting meeting dates/times for meeting
+	•	Interested doctor choose dates/time and sends “Meeting Request”.
+	•	Engineer receives notification.
+	•	Parties agree on date/time.
+	•	They meet externally (Zoom/Teams).
+	•	If collaboration forms:
+	•	Engineer marks announcement as “Partner Found”.
+	•	Status becomes CLOSED.
+3.2 Doctor-Initiated Flow
+	•	Doctor registers.
+	•	Doctor posts short structured post (text) that include:
+	•	Medical field
+	•	Short explanation
+	•	Desired technical expertise
+	•	Project stage
+	•	Level of commitment required
+	•	Engineers browse posts.
+	•	Engineer expresses interests via short message.
+	•	 Healthcare professional acknowledges the interest suggesting meeting dates/times for meeting 
+	•	Engineer  choose dates/time and sends “Meeting Request”.
+	•	Meeting is scheduled.
+	•	If successful:
+	•	Doctor marks “Partner Found”.
+	•	Announcement status changes to CLOSED.
+
+4. Functional Requirements
+
+4.1 User Registration & Access Control
+	•	Registration restricted to institutional .edu email addresses only
+	•	Personal email providers are not permitted
+	•	Email verification required
+	•	Role selection (Engineer / Healthcare Professional / Admin)
+	•	Role-Based Access Control (RBAC) enforced
+
+4.2 Post Management
+Users must be able to:
+a.Create a post containing:
+	•	Title
+	•	Expertise required (medical / engineering)
+	•	Post details for doctors
+	•	Working domain (e.g., cardiology imaging)
+	•	Short explanation
+	•	Desired technical expertise
+	•	Level of commitment required
+	•	Post details for engineers
+	•	Working domain (e.g., cardiology imaging)
+	•	Short explanation
+	•	What kind of healthcare expertise is needed
+	•	High-level idea (without revealing sensitive details)
+	•	Estimated collaboration type (advisor / co-founder / research partner)
+	•	Confidentiality level:
+	•	Public short pitch
+	•	“Details discussed in meeting only”
+	•	Expiry date
+	•	Project stage (idea, concept validation, prototype developed, pilot testing, pre-deployment)
+	•	Auto-close option
+	•	Country
+	•	City
+b. Edit Posts
+c. Mark post as "Partner Found"
+d. Archive or allow expiry
+Post Lifecycle States:
+	•	Draft
+	•	Active
+	•	Meeting Scheduled
+	•	Partner Found (Closed)
+	•	Expired
+The system must NOT allow:
+	•	Upload of technical documentation
+	•	Upload of patient data
+	•	File repository functionality
+
+4.3 Search & Matching
+	•	Filter by:
+	•	Domain
+	•	Required expertise
+	•	City
+	•	Country
+	•	Project stage
+	•	Status
+	•	Highlight city-based matches
+	•	Provide match explanation (e.g., shared expertise tags)
+
+4.4 Meeting Request Workflow
+Users must be able to:
+	•	Send meeting request (with accepting NDA)
+	•	Accept / decline request
+	•	Propose time slots
+	•	Cancel meeting request
+Meetings occur externally. No meeting recordings stored.
+
+4.5 Administrative Dashboard
+Admin Dashboard accessible only via ROLE BASED ACCESS.
+4.5.1 Post Management (Admin)
+	•	View all posts
+	•	Filter by city, domain, status
+	•	Remove inappropriate posts
+	•	View lifecycle history
+	•	View platform statistics
+4.5.2 User Management (Admin)
+	•	View all registered users
+	•	Filter by role
+	•	View profile completeness
+	•	Suspend / deactivate accounts
+	•	View activity metrics
+
+4.6 Activity Logging & Audit Trail
+The platform must implement comprehensive logging.
+4.6.1 Events Logged
+	•	Login / logout
+	•	Failed login attempts
+	•	Post creation / edit / close
+	•	Meeting request events
+	•	Admin actions
+	•	Security events
+4.6.2 Log Data Fields
+	•	Timestamp
+	•	User ID
+	•	Role
+	•	Action type
+	•	Target entity
+	•	Result status
+	•	Optional: IP address (GDPR-compliant)
+4.6.3 Logging Constraints
+	•	No patient data in logs
+	•	Data minimization
+	•	Logs tamper-resistant
+	•	Defined retention period (24 months)
+	•	Admin-only access
+4.6.4 Admin Log Dashboard
+	•	Filter logs by user, date, action
+	•	Export logs (CSV)
+	•	Detect anomaly patterns
+
+5. Non-Functional Requirements
+5.1 GDPR & Privacy
+	•	Minimal data collection
+	•	Right to delete account
+	•	Right to export data
+	•	Clear privacy policy
+	•	No patient data storage
+5.2 Security
+	•	HTTPS mandatory
+	•	Encrypted password storage
+	•	Secure session management
+	•	Automatic session timeout
+	•	Rate limiting
+	•	Anti-bot protection
+5.3 Performance
+	•	Search response < 1.5 sec
+	•	Page load < 3 sec
+	•	Support 1000 concurrent users
+5.4 Usability (Highest Priority)
+Learnability
+	•	Understandable within 20 seconds
+	•	Announcement creation ≤ 3 steps
+Efficiency
+	•	Post announcement < 3 minutes
+	•	Send meeting request < 30 seconds
+Clarity
+	•	Plain language
+	•	Tooltips for IP/NDA
+	•	Clear status indicators
+Accessibility
+	•	WCAG 2.1 compliance
+	•	Mobile responsive
+6. System Constraints
+	•	Platform facilitates first contact only with NDA acceptance.
+	•	No financial transactions
+	•	No contract management
+	•	No medical advice
+	•	Registration limited to institutional .edu emails
+7. Success Indicators
+	•	Announcements receive meeting requests
+	•	Meetings convert into closed matches
+	•	Cross-disciplinary collaborations formed
+	•	No IP or data leakage incidents
+8. End-of-Semester Competition
+
