@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                    String    @id @default(cuid())
+  slug                  String    @unique
+  email                 String    @unique
+  password              String
+  firstName             String
+  lastName              String
+  role                  String    @default("engineer") // engineer, healthcare, admin
+  institution           String    @default("")
+  city                  String    @default("")
+  country               String    @default("")
+  expertise             String    @default("[]") // JSON array
+  bio                   String    @default("")
+  avatarUrl             String    @default("")
+  profileCompleteness   Int       @default(40)
+  isActive              Boolean   @default(true)
+  isEmailVerified       Boolean   @default(false)
+  emailVerificationCode String?
+  lastLogin             DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  posts                 Post[]
+  interests             Interest[]
+  sentRequests          MeetingRequest[] @relation("SentRequests")
+  receivedRequests      MeetingRequest[] @relation("ReceivedRequests")
+  notifications         Notification[]
+  auditLogs             AuditLog[]
+}
+
+model Post {
+  id                  String    @id @default(cuid())
+  authorId            String
+  author              User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title               String
+  domain              String
+  description         String
+  requiredExpertise   String    @default("[]") // JSON array
+  projectStage        String    @default("idea") // idea, concept_validation, prototype, pilot_testing, pre_deployment
+  commitmentLevel     String    @default("medium") // low, medium, high, full_time
+  collaborationType   String    @default("research_partner") // advisor, co_founder, research_partner
+  confidentialityLevel String   @default("public") // public, meeting_only
+  highLevelIdea       String?
+  city                String    @default("")
+  country             String    @default("")
+  status              String    @default("active") // draft, active, meeting_scheduled, partner_found, expired
+  expiryDate          DateTime?
+  autoClose           Boolean   @default(false)
+  interestCount       Int       @default(0)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  interests           Interest[]
+  meetingRequests      MeetingRequest[]
+}
+
+model Interest {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+}
+
+model MeetingRequest {
+  id            String   @id @default(cuid())
+  postId        String
+  post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  requesterId   String
+  requester     User     @relation("SentRequests", fields: [requesterId], references: [id], onDelete: Cascade)
+  receiverId    String
+  receiver      User     @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+  message       String   @default("")
+  proposedSlots String   @default("[]") // JSON array of {id, date, startTime, endTime}
+  selectedSlot  String?  // JSON {id, date, startTime, endTime}
+  status        String   @default("pending") // pending, accepted, declined, scheduled, completed, cancelled
+  ndaAccepted   Boolean  @default(false)
+  meetingLink   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // interest, meeting_request, meeting_accepted, meeting_declined, partner_found
+  message   String
+  read      Boolean  @default(false)
+  linkTo    String   @default("")
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userName      String   @default("Unknown")
+  userRole      String   @default("")
+  actionType    String
+  targetEntity  String
+  targetId      String   @default("")
+  resultStatus  String   @default("success") // success, failure
+  details       String?  // JSON string
+  ipAddress     String?
+  timestamp     DateTime @default(now())
+}

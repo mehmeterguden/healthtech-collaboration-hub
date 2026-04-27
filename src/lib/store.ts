@@ -1,6 +1,5 @@
 import { create } from "zustand";
-import { User, Post, MeetingRequest, Notification } from "@/types";
-import { USERS, NOTIFICATIONS } from "./mock-data";
+import { User, Notification } from "@/types";
 
 interface AuthState {
   user: User | null;
@@ -12,9 +11,9 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: USERS[0],
-  token: "mock-jwt-token-u1",
-  isAuthenticated: true,
+  user: null,
+  token: null,
+  isAuthenticated: false,
   setAuth: (user, token) => set({ user, token, isAuthenticated: true }),
   logout: () => set({ user: null, token: null, isAuthenticated: false }),
   updateUser: (data) =>
@@ -26,13 +25,19 @@ export const useAuthStore = create<AuthState>((set) => ({
 interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
+  setNotifications: (notifications: Notification[]) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
 }
 
 export const useNotificationStore = create<NotificationState>((set) => ({
-  notifications: NOTIFICATIONS,
-  unreadCount: NOTIFICATIONS.filter((n) => !n.read).length,
+  notifications: [],
+  unreadCount: 0,
+  setNotifications: (notifications) =>
+    set({
+      notifications,
+      unreadCount: notifications.filter((n) => !n.read).length,
+    }),
   markAsRead: (id) =>
     set((state) => {
       const updated = state.notifications.map((n) =>

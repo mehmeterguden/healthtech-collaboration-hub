@@ -9,29 +9,30 @@ import {
   Notification,
   PostStatus,
 } from "@/types";
-import {
-  USERS,
-  POSTS,
-  INTERESTS,
-  MEETINGS,
-  LOGS,
-  NOTIFICATIONS,
-  PLATFORM_STATS,
-  DASHBOARD_STATS,
-} from "./mock-data";
 
-function delay(ms: number = 500): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 300 + Math.random() * ms));
+async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.error || "An error occurred");
+  }
+
+  return res.json();
 }
 
 export const authApi = {
-  async login(email: string, _password: string): Promise<{ user: User; token: string }> {
-    await delay(600);
-    const user = USERS.find((u) => u.email === email);
-    if (!user) {
-      throw new Error("Invalid email or password");
-    }
-    return { user, token: "mock-jwt-token-" + user.id };
+  async login(email: string, password: string): Promise<{ user: User; token: string }> {
+    return fetcher("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
   },
 
   async register(data: {
@@ -44,45 +45,35 @@ export const authApi = {
     city: string;
     country: string;
   }): Promise<{ user: User; token: string }> {
-    await delay(800);
-    if (!data.email.endsWith(".edu")) {
-      throw new Error("Only institutional .edu email addresses are allowed");
-    }
-    const newUser: User = {
-      id: "u" + (USERS.length + 1),
-      email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      role: data.role as User["role"],
-      institution: data.institution,
-      city: data.city,
-      country: data.country,
-      expertise: [],
-      bio: "",
-      avatarUrl: "",
-      profileCompleteness: 40,
-      createdAt: new Date().toISOString(),
-      isActive: true,
-      lastLogin: new Date().toISOString(),
-      postCount: 0,
-      meetingCount: 0,
-      matchRate: 0,
-    };
-    return { user: newUser, token: "mock-jwt-token-" + newUser.id };
+    return fetcher("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   },
 
   async verifyEmail(code: string): Promise<{ success: boolean }> {
-    await delay(500);
-    if (code === "123456") {
-      return { success: true };
-    }
-    throw new Error("Invalid verification code");
+    return fetcher("/api/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    });
   },
 
-  async forgotPassword(_email: string): Promise<{ success: boolean }> {
-    await delay(500);
-    return { success: true };
+  async forgotPassword(email: string): Promise<{ success: boolean }> {
+    return fetcher("/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
   },
+
+  async me(): Promise<{ user: User }> {
+    return fetcher("/api/auth/me");
+  },
+  
+  async logout(): Promise<{ success: boolean }> {
+    return fetcher("/api/auth/logout", {
+      method: "POST",
+    });
+  }
 };
 
 export const postsApi = {
@@ -95,113 +86,54 @@ export const postsApi = {
     status?: PostStatus;
     search?: string;
   }): Promise<Post[]> {
-    await delay(400);
-    let filtered = [...POSTS];
+    const params = new URLSearchParams();
     if (filters) {
-      if (filters.domain) {
-        filtered = filtered.filter((p) =>
-          p.domain.toLowerCase().includes(filters.domain!.toLowerCase())
-        );
-      }
-      if (filters.city) {
-        filtered = filtered.filter((p) =>
-          p.city.toLowerCase().includes(filters.city!.toLowerCase())
-        );
-      }
-      if (filters.country) {
-        filtered = filtered.filter((p) =>
-          p.country.toLowerCase().includes(filters.country!.toLowerCase())
-        );
-      }
-      if (filters.stage) {
-        filtered = filtered.filter((p) => p.projectStage === filters.stage);
-      }
-      if (filters.status) {
-        filtered = filtered.filter((p) => p.status === filters.status);
-      }
-      if (filters.search) {
-        const q = filters.search.toLowerCase();
-        filtered = filtered.filter(
-          (p) =>
-            p.title.toLowerCase().includes(q) ||
-            p.description.toLowerCase().includes(q) ||
-            p.domain.toLowerCase().includes(q)
-        );
-      }
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
     }
-    return filtered;
+    return fetcher(`/api/posts?${params.toString()}`);
   },
 
   async getById(id: string): Promise<Post> {
-    await delay(300);
-    const post = POSTS.find((p) => p.id === id);
-    if (!post) throw new Error("Post not found");
-    return post;
+    return fetcher(`/api/posts/${id}`);
   },
 
   async create(data: Partial<Post>): Promise<Post> {
-    await delay(700);
-    const newPost: Post = {
-      id: "p" + (POSTS.length + 1),
-      authorId: "u1",
-      author: USERS[0],
-      title: data.title || "",
-      domain: data.domain || "",
-      description: data.description || "",
-      requiredExpertise: data.requiredExpertise || [],
-      projectStage: data.projectStage || "idea",
-      commitmentLevel: data.commitmentLevel || "medium",
-      collaborationType: data.collaborationType || "research_partner",
-      confidentialityLevel: data.confidentialityLevel || "public",
-      city: data.city || "",
-      country: data.country || "",
-      status: "active",
-      expiryDate: data.expiryDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-      autoClose: data.autoClose || false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      interestCount: 0,
-      highLevelIdea: data.highLevelIdea,
-    };
-    return newPost;
+    return fetcher("/api/posts", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   },
 
   async update(id: string, data: Partial<Post>): Promise<Post> {
-    await delay(500);
-    const post = POSTS.find((p) => p.id === id);
-    if (!post) throw new Error("Post not found");
-    return { ...post, ...data, updatedAt: new Date().toISOString() };
+    return fetcher(`/api/posts/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
   },
 
   async expressInterest(postId: string, message: string): Promise<Interest> {
-    await delay(500);
-    return {
-      id: "i" + (INTERESTS.length + 1),
-      postId,
-      userId: "u1",
-      user: USERS[0],
-      message,
-      createdAt: new Date().toISOString(),
-    };
+    return fetcher(`/api/posts/${postId}/interests`, {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    });
   },
 
   async getInterests(postId: string): Promise<Interest[]> {
-    await delay(300);
-    return INTERESTS.filter((i) => i.postId === postId);
+    return fetcher(`/api/posts/${postId}/interests`);
   },
 
   async delete(id: string): Promise<{ success: boolean }> {
-    await delay(400);
-    const post = POSTS.find((p) => p.id === id);
-    if (!post) throw new Error("Post not found");
-    return { success: true };
+    return fetcher(`/api/posts/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
 export const meetingsApi = {
   async getAll(): Promise<MeetingRequest[]> {
-    await delay(400);
-    return [...MEETINGS];
+    return fetcher("/api/meetings");
   },
 
   async create(data: {
@@ -210,106 +142,92 @@ export const meetingsApi = {
     message: string;
     proposedSlots: { date: string; startTime: string; endTime: string }[];
   }): Promise<MeetingRequest> {
-    await delay(600);
-    const post = POSTS.find((p) => p.id === data.postId);
-    const receiver = USERS.find((u) => u.id === data.receiverId);
-    if (!post || !receiver) throw new Error("Invalid post or receiver");
-    return {
-      id: "m" + (MEETINGS.length + 1),
-      postId: data.postId,
-      post,
-      requesterId: "u1",
-      requester: USERS[0],
-      receiverId: data.receiverId,
-      receiver,
-      message: data.message,
-      proposedSlots: data.proposedSlots.map((s, i) => ({ ...s, id: `ts_new_${i}` })),
-      status: "pending",
-      ndaAccepted: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    return fetcher("/api/meetings", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   },
 
   async accept(id: string, slotId: string): Promise<MeetingRequest> {
-    await delay(500);
-    const meeting = MEETINGS.find((m) => m.id === id);
-    if (!meeting) throw new Error("Meeting not found");
-    const slot = meeting.proposedSlots.find((s) => s.id === slotId);
-    return { ...meeting, status: "scheduled", selectedSlot: slot, updatedAt: new Date().toISOString() };
+    return fetcher(`/api/meetings/${id}/accept`, {
+      method: "POST",
+      body: JSON.stringify({ slotId }),
+    });
   },
 
   async decline(id: string): Promise<MeetingRequest> {
-    await delay(400);
-    const meeting = MEETINGS.find((m) => m.id === id);
-    if (!meeting) throw new Error("Meeting not found");
-    return { ...meeting, status: "declined", updatedAt: new Date().toISOString() };
+    return fetcher(`/api/meetings/${id}/decline`, {
+      method: "POST",
+    });
   },
 
   async cancel(id: string): Promise<MeetingRequest> {
-    await delay(400);
-    const meeting = MEETINGS.find((m) => m.id === id);
-    if (!meeting) throw new Error("Meeting not found");
-    return { ...meeting, status: "cancelled", updatedAt: new Date().toISOString() };
+    return fetcher(`/api/meetings/${id}/cancel`, {
+      method: "POST",
+    });
   },
 };
 
 export const usersApi = {
   async getProfile(): Promise<User> {
-    await delay(300);
-    return USERS[0];
+    return fetcher("/api/users/profile");
+  },
+
+  async getBySlug(slug: string): Promise<User> {
+    return fetcher(`/api/users/${slug}`);
   },
 
   async updateProfile(data: Partial<User>): Promise<User> {
-    await delay(500);
-    return { ...USERS[0], ...data };
+    return fetcher("/api/users/profile", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
   },
 
   async deleteAccount(): Promise<{ success: boolean }> {
-    await delay(600);
-    return { success: true };
+    return fetcher("/api/users/profile", {
+      method: "DELETE",
+    });
   },
 
   async exportData(): Promise<{ downloadUrl: string }> {
-    await delay(800);
-    return { downloadUrl: "/mock-export.json" };
+    return fetcher("/api/users/export");
   },
 };
 
 export const adminApi = {
   async getStats(): Promise<PlatformStats> {
-    await delay(500);
-    return PLATFORM_STATS;
+    return fetcher("/api/admin/stats");
   },
 
   async getDashboardStats(): Promise<DashboardStats> {
-    await delay(300);
-    return DASHBOARD_STATS;
+    return fetcher("/api/admin/dashboard-stats");
   },
 
   async getAllPosts(): Promise<Post[]> {
-    await delay(400);
-    return [...POSTS];
+    return fetcher("/api/admin/posts");
   },
 
   async removePost(id: string): Promise<{ success: boolean }> {
-    await delay(400);
-    return { success: true };
+    return fetcher(`/api/admin/posts/${id}`, {
+      method: "DELETE",
+    });
   },
 
   async getAllUsers(): Promise<User[]> {
-    await delay(400);
-    return [...USERS];
+    return fetcher("/api/admin/users");
   },
 
   async suspendUser(id: string): Promise<{ success: boolean }> {
-    await delay(400);
-    return { success: true };
+    return fetcher(`/api/admin/users/${id}/suspend`, {
+      method: "POST",
+    });
   },
 
   async activateUser(id: string): Promise<{ success: boolean }> {
-    await delay(400);
-    return { success: true };
+    return fetcher(`/api/admin/users/${id}/activate`, {
+      method: "POST",
+    });
   },
 
   async getLogs(filters?: {
@@ -318,26 +236,20 @@ export const adminApi = {
     startDate?: string;
     endDate?: string;
   }): Promise<ActivityLog[]> {
-    await delay(400);
-    let filtered = [...LOGS];
+    const params = new URLSearchParams();
     if (filters) {
-      if (filters.userId) {
-        filtered = filtered.filter((l) => l.userId === filters.userId);
-      }
-      if (filters.actionType) {
-        filtered = filtered.filter((l) => l.actionType === filters.actionType);
-      }
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
     }
-    return filtered;
+    return fetcher(`/api/admin/logs?${params.toString()}`);
   },
 
   async getNotifications(): Promise<Notification[]> {
-    await delay(300);
-    return [...NOTIFICATIONS];
+    return fetcher("/api/notifications");
   },
 
   async exportLogs(): Promise<{ downloadUrl: string }> {
-    await delay(600);
-    return { downloadUrl: "/mock-logs-export.csv" };
+    return fetcher("/api/admin/logs/export");
   },
 };

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/lib/store";
-import { USERS, POSTS } from "@/lib/mock-data";
+import { usersApi } from "@/lib/api";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
@@ -36,8 +36,9 @@ export default function ProfilePage() {
   const updateUser = useAuthStore((s) => s.updateUser);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [profileUser, setProfileUser] = useState<any>(authUser);
+  const [profileUser, setProfileUser] = useState<any>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editForm, setEditForm] = useState({
     firstName: "",
     lastName: "",
@@ -48,20 +49,27 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    if (slug) {
-      const found = USERS.find(u => u.slug === slug);
-      if (found) {
-        setProfileUser({ ...found });
-        setUserPosts(POSTS.filter((p) => p.authorId === found.id));
-      } else if (authUser && authUser.slug === slug) {
-        setProfileUser({ ...authUser });
-        setUserPosts(POSTS.filter((p) => p.authorId === authUser.id));
+    async function load() {
+      try {
+        if (slug) {
+          const user = await usersApi.getBySlug(slug);
+          setProfileUser(user);
+          setUserPosts((user as any).posts || []);
+        } else if (authUser) {
+          const user = await usersApi.getBySlug(authUser.slug);
+          setProfileUser(user);
+          setUserPosts((user as any).posts || []);
+        }
+      } catch (error) {
+        console.error("Failed to load profile", error);
+      } finally {
+        setLoading(false);
       }
-    } else if (authUser) {
-      setProfileUser({ ...authUser });
-      setUserPosts(POSTS.filter((p) => p.authorId === authUser.id));
     }
+    load();
   }, [slug, authUser]);
+
+  if (loading) return <div className="text-center p-8">Loading profile...</div>;
 
   if (!profileUser) return <div className="text-center p-8">User not found</div>;
 

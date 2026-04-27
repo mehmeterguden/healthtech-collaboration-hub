@@ -205,8 +205,8 @@ export default function AdminDashboardPage() {
                   cy="50%"
                   outerRadius={90}
                   innerRadius={55}
-                  label={({ role, percent }) =>
-                    `${role} ${(percent * 100).toFixed(0)}%`
+                  label={({ role, percent }: any) =>
+                    `${role} ${percent ? (percent * 100).toFixed(0) : 0}%`
                   }
                   labelLine={false}
                   stroke="none"
