@@ -80,8 +80,14 @@ export default function AdminLogsPage() {
 
   const handleExport = async () => {
     try {
-      await adminApi.exportLogs();
-      toast.success("Logs exported as CSV");
+      const result = await adminApi.exportLogs();
+      const link = document.createElement("a");
+      link.href = result.downloadUrl;
+      link.download = "healthai-audit-logs.json";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Logs exported successfully");
     } catch {
       toast.error("Failed to export logs");
     }

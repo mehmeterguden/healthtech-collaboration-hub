@@ -26,6 +26,7 @@ export async function PATCH(req: Request) {
         city: body.city,
         country: body.country,
         institution: body.institution,
+        expertise: body.expertise ? JSON.stringify(body.expertise) : undefined,
       },
     });
 

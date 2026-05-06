@@ -13,11 +13,24 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 export function Topbar() {
   const user = useAuthStore((s) => s.user);
+  const router = useRouter();
+  const [search, setSearch] = useState("");
+  
   const { notifications, unreadCount, markAsRead, markAllAsRead } =
     useNotificationStore();
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (search.trim()) {
+      router.push(`/dashboard/posts?search=${encodeURIComponent(search.trim())}`);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/80 backdrop-blur-xl px-4 lg:px-6">
@@ -30,13 +43,15 @@ export function Topbar() {
         <Menu className="h-5 w-5" />
       </Button>
 
-      <div className="relative flex-1 max-w-md">
+      <form onSubmit={handleSearch} className="relative flex-1 max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search posts, users..."
+          placeholder="Search posts..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           className="pl-9 bg-muted/50 border-transparent focus-visible:border-primary/50 h-9"
         />
-      </div>
+      </form>
 
       <div className="flex items-center gap-3 ml-auto">
         <Popover>

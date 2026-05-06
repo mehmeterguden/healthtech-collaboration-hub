@@ -32,8 +32,11 @@ import {
   Heart,
   CheckCircle,
   Send,
+  CalendarDays,
+  Edit,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
+import { RequestMeetingModal } from "@/components/meetings/request-meeting-modal";
 
 const stageLabels: Record<string, string> = {
   idea: "Idea",
@@ -78,6 +81,7 @@ export default function PostDetailPage() {
   const [interestMessage, setInterestMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [meetingModalOpen, setMeetingModalOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -390,6 +394,41 @@ export default function PostDetailPage() {
               </div>
             </DialogContent>
           </Dialog>
+        )}
+
+        {!isOwner && post.status === "active" && (
+          <>
+            <Button 
+              variant="outline" 
+              className="gap-1.5 border-primary/20 text-primary hover:bg-primary/5"
+              onClick={() => setMeetingModalOpen(true)}
+            >
+              <CalendarDays className="h-4 w-4" />
+              Request Meeting
+            </Button>
+            
+            <RequestMeetingModal
+              open={meetingModalOpen}
+              onOpenChange={setMeetingModalOpen}
+              postId={post.id}
+              receiverId={post.authorId}
+              onSuccess={() => {
+                // Optionally refresh or show a message
+              }}
+            />
+          </>
+        )}
+
+        {isOwner && post.status !== "partner_found" && post.status !== "expired" && (
+          <Link href={`/dashboard/edit-post/${post.id}`}>
+            <Button
+              variant="outline"
+              className="gap-1.5"
+            >
+              <Edit className="h-4 w-4" />
+              Edit Post
+            </Button>
+          </Link>
         )}
 
         {isOwner && post.status !== "partner_found" && post.status !== "expired" && (

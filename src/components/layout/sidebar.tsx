@@ -14,16 +14,22 @@ import {
   LogOut,
   Activity,
   X,
+  Layers,
+  Bell,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/posts", label: "Browse Posts", icon: FileText },
+  { href: "/dashboard/my-posts", label: "My Posts", icon: Layers },
   { href: "/dashboard/create-post", label: "Create Post", icon: PlusCircle },
   { href: "/dashboard/meetings", label: "Meetings", icon: Calendar },
+  { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
   { href: "/dashboard/profile", label: "Profile", icon: User },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard/faq", label: "Help & FAQ", icon: HelpCircle },
 ];
 
 export function Sidebar() {
@@ -110,7 +116,13 @@ export function Sidebar() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={() => {
+                onClick={async () => {
+                  try {
+                    const { authApi } = await import("@/lib/api");
+                    await authApi.logout();
+                  } catch (err) {
+                    console.error("Logout failed:", err);
+                  }
                   logout();
                   window.location.href = "/login";
                 }}

@@ -7,7 +7,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     const user = await requireAuth();
     const id = (await params).id;
-    const { slotId, customSlot } = await req.json();
 
     const meeting = await prisma.meetingRequest.findUnique({
       where: { id },
@@ -15,33 +14,25 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     });
 
     if (!meeting) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    if (meeting.receiverId !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-    let selectedSlot = null;
-    if (slotId === "custom" && customSlot) {
-      selectedSlot = customSlot;
-    } else {
-      const proposedSlots = JSON.parse(meeting.proposedSlots || "[]");
-      selectedSlot = proposedSlots.find((s: any) => s.id === slotId);
+    if (meeting.requesterId !== user.id && meeting.receiverId !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-
-    if (!selectedSlot) return NextResponse.json({ error: "Invalid slot" }, { status: 400 });
+    if (meeting.status !== "scheduled") {
+      return NextResponse.json({ error: "Meeting must be scheduled first" }, { status: 400 });
+    }
 
     const updated = await prisma.meetingRequest.update({
       where: { id },
-      data: {
-        status: "scheduled",
-        selectedSlot: JSON.stringify(selectedSlot),
-        meetingLink: `https://meet.healthai.edu/${Math.random().toString(36).substring(7)}`, // Mock link
-      },
+      data: { status: "completed" },
       include: { post: true, requester: true, receiver: true },
     });
 
+    const notifyId = meeting.requesterId === user.id ? meeting.receiverId : meeting.requesterId;
     await prisma.notification.create({
       data: {
-        userId: meeting.requesterId,
-        type: "meeting_accepted",
-        message: `${user.firstName} ${user.lastName} accepted your meeting request`,
+        userId: notifyId,
+        type: "partner_found",
+        message: `${user.firstName} ${user.lastName} marked your meeting as completed`,
         linkTo: "/dashboard/meetings",
       },
     });
@@ -50,7 +41,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       userId: user.id,
       userName: `${user.firstName} ${user.lastName}`,
       userRole: user.role,
-      actionType: "meeting_accept",
+      actionType: "meeting_complete",
       targetEntity: "meeting",
       targetId: id,
     });
@@ -60,7 +51,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       requester: sanitizeUser(updated.requester),
       receiver: sanitizeUser(updated.receiver),
       proposedSlots: JSON.parse(updated.proposedSlots || "[]"),
-      selectedSlot: JSON.parse(updated.selectedSlot || "null"),
+      selectedSlot: updated.selectedSlot ? JSON.parse(updated.selectedSlot) : undefined,
     });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

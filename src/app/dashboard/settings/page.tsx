@@ -48,6 +48,12 @@ export default function SettingsPage() {
     emailMeeting: true,
     emailUpdates: false,
   });
+  const [pwForm, setPwForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [pwLoading, setPwLoading] = useState(false);
 
   const handleSave = async () => {
     setLoading(true);
@@ -64,8 +70,15 @@ export default function SettingsPage() {
 
   const handleExport = async () => {
     try {
-      await usersApi.exportData();
-      toast.success("Data export started. You will receive a download link.");
+      const result = await usersApi.exportData();
+      // Trigger a download by opening the data URI
+      const link = document.createElement("a");
+      link.href = result.downloadUrl;
+      link.download = "healthai-my-data.json";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Data exported successfully!");
     } catch {
       toast.error("Failed to export data");
     }
@@ -79,6 +92,42 @@ export default function SettingsPage() {
       window.location.href = "/";
     } catch {
       toast.error("Failed to delete account");
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!pwForm.currentPassword || !pwForm.newPassword) {
+      toast.error("Please fill in all password fields");
+      return;
+    }
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    if (pwForm.newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+    setPwLoading(true);
+    try {
+      const res = await fetch("/api/users/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: pwForm.currentPassword,
+          newPassword: pwForm.newPassword,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to change password");
+      }
+      toast.success("Password updated successfully");
+      setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to change password");
+    } finally {
+      setPwLoading(false);
     }
   };
 
@@ -212,22 +261,60 @@ export default function SettingsPage() {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="current-pw">Current Password</Label>
-            <Input id="current-pw" type="password" className="h-10" />
+            <Input
+              id="current-pw"
+              type="password"
+              className="h-10"
+              value={pwForm.currentPassword}
+              onChange={(e) =>
+                setPwForm((p) => ({ ...p, currentPassword: e.target.value }))
+              }
+            />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="new-pw">New Password</Label>
-              <Input id="new-pw" type="password" className="h-10" />
+              <Input
+                id="new-pw"
+                type="password"
+                className="h-10"
+                value={pwForm.newPassword}
+                onChange={(e) =>
+                  setPwForm((p) => ({ ...p, newPassword: e.target.value }))
+                }
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm-pw">Confirm New Password</Label>
-              <Input id="confirm-pw" type="password" className="h-10" />
+              <Input
+                id="confirm-pw"
+                type="password"
+                className="h-10"
+                value={pwForm.confirmPassword}
+                onChange={(e) =>
+                  setPwForm((p) => ({ ...p, confirmPassword: e.target.value }))
+                }
+              />
             </div>
           </div>
           <div className="flex justify-end">
-            <Button variant="outline" className="gap-1.5">
-              <Lock className="h-4 w-4" />
-              Update Password
+            <Button
+              variant="outline"
+              className="gap-1.5"
+              onClick={handleChangePassword}
+              disabled={pwLoading}
+            >
+              {pwLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Updating...
+                </span>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4" />
+                  Update Password
+                </>
+              )}
             </Button>
           </div>
         </div>

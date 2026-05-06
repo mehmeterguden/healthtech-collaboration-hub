@@ -148,10 +148,10 @@ export const meetingsApi = {
     });
   },
 
-  async accept(id: string, slotId: string): Promise<MeetingRequest> {
+  async accept(id: string, slotId: string, customSlot?: { date: string; startTime: string; endTime: string }): Promise<MeetingRequest> {
     return fetcher(`/api/meetings/${id}/accept`, {
       method: "POST",
-      body: JSON.stringify({ slotId }),
+      body: JSON.stringify({ slotId, customSlot }),
     });
   },
 
@@ -163,6 +163,12 @@ export const meetingsApi = {
 
   async cancel(id: string): Promise<MeetingRequest> {
     return fetcher(`/api/meetings/${id}/cancel`, {
+      method: "POST",
+    });
+  },
+
+  async complete(id: string): Promise<MeetingRequest> {
+    return fetcher(`/api/meetings/${id}/complete`, {
       method: "POST",
     });
   },
@@ -193,15 +199,15 @@ export const usersApi = {
   async exportData(): Promise<{ downloadUrl: string }> {
     return fetcher("/api/users/export");
   },
+
+  async getDashboardStats(): Promise<DashboardStats> {
+    return fetcher("/api/users/dashboard-stats");
+  },
 };
 
 export const adminApi = {
   async getStats(): Promise<PlatformStats> {
     return fetcher("/api/admin/stats");
-  },
-
-  async getDashboardStats(): Promise<DashboardStats> {
-    return fetcher("/api/admin/dashboard-stats");
   },
 
   async getAllPosts(): Promise<Post[]> {

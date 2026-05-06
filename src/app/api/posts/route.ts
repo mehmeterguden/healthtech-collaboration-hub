@@ -69,6 +69,7 @@ export async function POST(req: Request) {
         city: body.city || "",
         country: body.country || "",
         expiryDate: body.expiryDate ? new Date(body.expiryDate) : null,
+        status: body.status || "active",
         autoClose: body.autoClose || false,
       },
       include: {

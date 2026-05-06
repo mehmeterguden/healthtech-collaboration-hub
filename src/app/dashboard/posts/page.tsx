@@ -7,21 +7,31 @@ import { PostCard } from "@/components/posts/post-card";
 import { PostFilters } from "@/components/posts/post-filters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/lib/store";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { FileText } from "lucide-react";
 
 export default function PostsPage() {
   const user = useAuthStore((s) => s.user);
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+  
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    search: "",
+    search: initialSearch,
     domain: "",
     city: "",
     country: "",
     stage: "",
     status: "",
   });
+
+  // Sync filters with URL search params (for global header search)
+  useEffect(() => {
+    const query = searchParams.get("search") || "";
+    setFilters(prev => ({ ...prev, search: query }));
+  }, [searchParams]);
 
   useEffect(() => {
     async function load() {

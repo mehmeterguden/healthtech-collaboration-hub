@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Post } from "@/types";
 import { PostStatusBadge } from "@/components/posts/post-status-badge";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   MapPin,
   Building2,
@@ -26,6 +27,8 @@ import {
   Activity,
   Award,
   ChevronRight,
+  Plus,
+  X,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -39,6 +42,8 @@ export default function ProfilePage() {
   const [profileUser, setProfileUser] = useState<any>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
   const [editForm, setEditForm] = useState({
     firstName: "",
     lastName: "",
@@ -46,6 +51,7 @@ export default function ProfilePage() {
     city: "",
     country: "",
     institution: "",
+    expertise: [] as string[],
   });
 
   useEffect(() => {
@@ -69,7 +75,14 @@ export default function ProfilePage() {
     load();
   }, [slug, authUser]);
 
-  if (loading) return <div className="text-center p-8">Loading profile...</div>;
+  if (loading) return (
+    <div className="flex h-[400px] items-center justify-center">
+      <div className="flex flex-col items-center gap-2">
+        <Activity className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground font-medium">Loading profile...</p>
+      </div>
+    </div>
+  );
 
   if (!profileUser) return <div className="text-center p-8">User not found</div>;
 
@@ -84,18 +97,34 @@ export default function ProfilePage() {
         city: profileUser.city || "",
         country: profileUser.country || "",
         institution: profileUser.institution || "",
+        expertise: Array.isArray(profileUser.expertise) ? [...profileUser.expertise] : [],
       });
     }
     setIsEditing(!isEditing);
   };
 
-  const handleSave = () => {
-    const updated = { ...profileUser, ...editForm };
-    setProfileUser(updated as any);
-    if (isOwnProfile) {
-      updateUser(editForm);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updatedUser = await usersApi.updateProfile(editForm);
+      setProfileUser({
+        ...profileUser,
+        ...updatedUser,
+        // Keep calculated stats that might not be in basic profile update response
+        postCount: profileUser.postCount,
+        meetingCount: profileUser.meetingCount,
+        matchRate: profileUser.matchRate,
+      });
+      if (isOwnProfile) {
+        updateUser(editForm);
+      }
+      setIsEditing(false);
+      toast.success("Profile updated successfully");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update profile");
+    } finally {
+      setSaving(false);
     }
-    setIsEditing(false);
   };
 
   const profileStats = [
@@ -119,8 +148,13 @@ export default function ProfilePage() {
             size="sm" 
             className="gap-2 rounded-full px-5 shadow-sm transition-all"
             onClick={isEditing ? handleSave : handleEditToggle}
+            disabled={saving}
           >
-            {isEditing ? (
+            {saving ? (
+              <>
+                <Activity className="h-4 w-4 animate-spin" /> Saving...
+              </>
+            ) : isEditing ? (
               <>
                 <Save className="h-4 w-4" /> Save Details
               </>
@@ -170,12 +204,14 @@ export default function ProfilePage() {
                       value={editForm.firstName} 
                       onChange={e => setEditForm({...editForm, firstName: e.target.value})} 
                       placeholder="First Name"
+                      disabled={saving}
                       className="text-lg font-semibold bg-background/50 backdrop-blur-md h-12 rounded-xl"
                     />
                     <Input 
                       value={editForm.lastName} 
                       onChange={e => setEditForm({...editForm, lastName: e.target.value})} 
                       placeholder="Last Name"
+                      disabled={saving}
                       className="text-lg font-semibold bg-background/50 backdrop-blur-md h-12 rounded-xl"
                     />
                   </motion.div>
@@ -210,6 +246,7 @@ export default function ProfilePage() {
                 value={editForm.bio} 
                 onChange={e => setEditForm({...editForm, bio: e.target.value})}
                 placeholder="Write a short bio about your expertise..."
+                disabled={saving}
                 className="text-sm leading-relaxed bg-background/50 backdrop-blur-md rounded-xl resize-none"
                 rows={4}
               />
@@ -243,6 +280,7 @@ export default function ProfilePage() {
                     onChange={e => setEditForm({...editForm, institution: e.target.value})}
                     className="h-7 text-xs bg-background/50 mt-1" 
                     placeholder="Institution"
+                    disabled={saving}
                   />
                 ) : (
                   <p className="text-sm font-medium truncate">{profileUser.institution}</p>
@@ -263,12 +301,14 @@ export default function ProfilePage() {
                       onChange={e => setEditForm({...editForm, city: e.target.value})}
                       className="h-7 w-32 text-xs bg-background/50" 
                       placeholder="City"
+                      disabled={saving}
                     />
                     <Input 
                       value={editForm.country} 
                       onChange={e => setEditForm({...editForm, country: e.target.value})}
                       className="h-7 w-32 text-xs bg-background/50" 
                       placeholder="Country"
+                      disabled={saving}
                     />
                   </div>
                 ) : (
@@ -281,14 +321,51 @@ export default function ProfilePage() {
           <div className="mt-8">
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Expertise & Domains</h3>
             <div className="flex flex-wrap gap-2">
-              {profileUser.expertise.map((tag: string) => (
-                <span
-                  key={tag}
-                  className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-1.5 text-xs font-semibold text-primary transition-all hover:bg-primary/10 hover:border-primary/30 shadow-sm"
-                >
-                  {tag}
-                </span>
-              ))}
+              {isEditing ? (
+                <>
+                  {editForm.expertise.map((tag, index) => (
+                    <span
+                      key={`${tag}-${index}`}
+                      className="rounded-lg bg-primary/10 border border-primary/30 px-3 py-1.5 text-xs font-semibold text-primary flex items-center gap-1.5"
+                    >
+                      {tag}
+                      <button 
+                        onClick={() => setEditForm({...editForm, expertise: editForm.expertise.filter((_, i) => i !== index)})}
+                        className="hover:text-destructive transition-colors"
+                        disabled={saving}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      placeholder="Add tag..."
+                      className="h-8 text-xs w-28 bg-background/50"
+                      disabled={saving}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const val = (e.target as HTMLInputElement).value.trim();
+                          if (val && !editForm.expertise.includes(val)) {
+                            setEditForm({...editForm, expertise: [...editForm.expertise, val]});
+                            (e.target as HTMLInputElement).value = "";
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                </>
+              ) : (
+                profileUser.expertise.map((tag: string) => (
+                  <span
+                    key={tag}
+                    className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-1.5 text-xs font-semibold text-primary transition-all hover:bg-primary/10 hover:border-primary/30 shadow-sm"
+                  >
+                    {tag}
+                  </span>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -410,7 +487,9 @@ export default function ProfilePage() {
                 Last Login
               </p>
               <p className="text-sm font-semibold">
-                {format(new Date(profileUser.lastLogin), "MMMM d, yyyy 'at' HH:mm")}
+                {profileUser.lastLogin 
+                  ? format(new Date(profileUser.lastLogin), "MMMM d, yyyy 'at' HH:mm")
+                  : "Never"}
               </p>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/lib/store";
-import { adminApi, postsApi } from "@/lib/api";
+import { usersApi, postsApi } from "@/lib/api";
 import { DashboardStats, Post } from "@/types";
 import { PostCard } from "@/components/posts/post-card";
 import { Button } from "@/components/ui/button";
@@ -34,19 +34,32 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function load() {
+      if (!user) return;
       try {
         const [s, posts] = await Promise.all([
-          adminApi.getDashboardStats(),
+          usersApi.getDashboardStats(),
           postsApi.getAll(),
         ]);
         setStats(s);
-        setRecentPosts(posts.filter((p) => p.status === "active").slice(0, 3));
+        
+        // Recommended posts: Active posts from other users
+        const othersPosts = posts.filter(p => p.authorId !== user.id && p.status === "active");
+        const recommended = othersPosts.filter(p => p.author.role !== user.role);
+        
+        // If not enough from opposite role, take any active posts from others
+        const finalRecommended = recommended.length >= 3 
+          ? recommended 
+          : [...recommended, ...othersPosts.filter(p => p.author.role === user.role)].slice(0, 3);
+          
+        setRecentPosts(finalRecommended);
+      } catch (err) {
+        console.error("Dashboard load error:", err);
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, []);
+  }, [user]);
 
   return (
     <div className="space-y-6">
@@ -93,11 +106,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-end gap-2">
                   <span className="text-2xl font-bold">
-                    {stats?.[card.key as keyof DashboardStats]}
-                  </span>
-                  <span className="mb-0.5 flex items-center gap-0.5 text-xs font-medium text-emerald-400">
-                    <TrendingUp className="h-3 w-3" />
-                    +12%
+                    {stats?.[card.key as keyof DashboardStats] || 0}
                   </span>
                 </div>
               </>

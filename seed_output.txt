@@ -1,0 +1,53 @@
+Seeding database...
+Seeding meeting m1: u2 -> u1
+Seeding meeting m2: u6 -> u4
+Seeding meeting m3: u2 -> u5
+Seeding meeting m4: u1 -> u2
+Seeding meeting m5: u1 -> u6
+Seeding meeting m6: u2 -> u5
+Seeding meeting m7: u2 -> u1
+Seeding meeting m8: u1 -> u2
+Seeding meeting m9: u5 -> u4
+Seeding meeting m10: u4 -> undefined
+PrismaClientValidationError: 
+Invalid `prisma.meetingRequest.upsert()` invocation in
+/Users/mehmeterguden/Desktop/Lessons/Proje 4/health-ai-platform/prisma/seed.ts:86:33
+
+  83 // Seed Meetings
+  84 for (const meeting of MEETINGS) {
+  85   console.log(`Seeding meeting ${meeting.id}: ${meeting.requesterId} -> ${meeting.receiverId}`);
+→ 86   await prisma.meetingRequest.upsert({
+         where: {
+           id: "m10"
+         },
+         update: {},
+         create: {
+           id: "m10",
+           postId: "p5",
+           requesterId: "u4",
+           receiverId: undefined,
+           message: "Laura, your glucose monitor project is very promising. Can we meet?",
+           proposedSlots: "[{\"id\":\"ts15\",\"date\":\"2026-05-14\",\"startTime\":\"11:00\",\"endTime\":\"12:00\"}]",
+           selectedSlot: null,
+           status: "pending",
+           ndaAccepted: true,
+           meetingLink: null,
+           createdAt: new Date("2026-05-04T10:00:00.000Z"),
+           updatedAt: new Date("2026-05-04T10:00:00.000Z"),
+       +   post: {
+       +     create: PostCreateWithoutMeetingRequestsInput | PostUncheckedCreateWithoutMeetingRequestsInput,
+       +     connectOrCreate: PostCreateOrConnectWithoutMeetingRequestsInput,
+       +     connect: PostWhereUniqueInput
+       +   }
+         }
+       })
+
+Argument `post` is missing.
+    at wn (/Users/mehmeterguden/Desktop/Lessons/Proje 4/health-ai-platform/node_modules/@prisma/client/runtime/library.js:29:1363)
+    at $n.handleRequestError (/Users/mehmeterguden/Desktop/Lessons/Proje 4/health-ai-platform/node_modules/@prisma/client/runtime/library.js:121:6958)
+    at $n.handleAndLogRequestError (/Users/mehmeterguden/Desktop/Lessons/Proje 4/health-ai-platform/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/Users/mehmeterguden/Desktop/Lessons/Proje 4/health-ai-platform/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at async l (/Users/mehmeterguden/Desktop/Lessons/Proje 4/health-ai-platform/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at async main (/Users/mehmeterguden/Desktop/Lessons/Proje 4/health-ai-platform/prisma/seed.ts:86:5) {
+  clientVersion: '5.22.0'
+}

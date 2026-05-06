@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,17 +15,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { postsApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
+import { Post } from "@/types";
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  Send,
+  Save,
   FileText,
   MapPin,
   Calendar,
   Shield,
-  Save,
+  Send,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -42,10 +44,13 @@ const domains = [
   "Genomics",
 ];
 
-export default function CreatePostPage() {
+export default function EditPostPage() {
+  const params = useParams();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [post, setPost] = useState<Post | null>(null);
   const [form, setForm] = useState({
     title: "",
     domain: "",
@@ -56,11 +61,53 @@ export default function CreatePostPage() {
     collaborationType: "",
     confidentialityLevel: "public",
     highLevelIdea: "",
-    city: user?.city || "",
-    country: user?.country || "",
+    city: "",
+    country: "",
     expiryDate: "",
     autoClose: false,
+    status: "active",
   });
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const p = await postsApi.getById(params.id as string);
+        setPost(p);
+
+        // Check authorization
+        if (p.authorId !== user?.id) {
+          toast.error("You can only edit your own posts");
+          router.push("/dashboard/my-posts");
+          return;
+        }
+
+        setForm({
+          title: p.title || "",
+          domain: p.domain || "",
+          description: p.description || "",
+          expertise: (p.requiredExpertise || []).join(", "),
+          projectStage: p.projectStage || "",
+          commitmentLevel: p.commitmentLevel || "",
+          collaborationType: p.collaborationType || "",
+          confidentialityLevel: p.confidentialityLevel || "public",
+          highLevelIdea: p.highLevelIdea || "",
+          city: p.city || "",
+          country: p.country || "",
+          expiryDate: p.expiryDate
+            ? new Date(p.expiryDate).toISOString().split("T")[0]
+            : "",
+          autoClose: p.autoClose || false,
+          status: p.status || "active",
+        });
+      } catch {
+        toast.error("Post not found");
+        router.push("/dashboard/my-posts");
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (user) load();
+  }, [params.id, user, router]);
 
   const updateForm = (key: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -73,9 +120,9 @@ export default function CreatePostPage() {
       return;
     }
 
-    setLoading(true);
+    setSaving(true);
     try {
-      await postsApi.create({
+      await postsApi.update(params.id as string, {
         title: form.title,
         domain: form.domain,
         description: form.description,
@@ -83,24 +130,10 @@ export default function CreatePostPage() {
           .split(",")
           .map((e) => e.trim())
           .filter(Boolean),
-        projectStage: form.projectStage as
-          | "idea"
-          | "concept_validation"
-          | "prototype"
-          | "pilot_testing"
-          | "pre_deployment",
-        commitmentLevel: form.commitmentLevel as
-          | "low"
-          | "medium"
-          | "high"
-          | "full_time",
-        collaborationType: form.collaborationType as
-          | "advisor"
-          | "co_founder"
-          | "research_partner",
-        confidentialityLevel: form.confidentialityLevel as
-          | "public"
-          | "meeting_only",
+        projectStage: form.projectStage as any,
+        commitmentLevel: form.commitmentLevel as any,
+        collaborationType: form.collaborationType as any,
+        confidentialityLevel: form.confidentialityLevel as any,
         highLevelIdea: form.highLevelIdea,
         city: form.city,
         country: form.country,
@@ -108,57 +141,70 @@ export default function CreatePostPage() {
           ? new Date(form.expiryDate).toISOString()
           : undefined,
         autoClose: form.autoClose,
+        status: form.status as any,
       });
-      toast.success("Post created successfully!");
-      router.push("/dashboard/posts");
+      toast.success("Post updated successfully!");
+      router.push("/dashboard/my-posts");
     } catch {
-      toast.error("Failed to create post");
+      toast.error("Failed to update post");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   const handleSaveAsDraft = async () => {
-    setLoading(true);
+    setSaving(true);
     try {
-      await postsApi.create({
+      await postsApi.update(params.id as string, {
         title: form.title || "Untitled Draft",
         domain: form.domain || "General",
         description: form.description || "",
+        status: "draft" as any,
         requiredExpertise: form.expertise
           .split(",")
           .map((e) => e.trim())
           .filter(Boolean),
-        projectStage: (form.projectStage || "idea") as any,
-        commitmentLevel: (form.commitmentLevel || "medium") as any,
-        collaborationType: (form.collaborationType || "research_partner") as any,
+        projectStage: form.projectStage as any,
+        commitmentLevel: form.commitmentLevel as any,
+        collaborationType: form.collaborationType as any,
         confidentialityLevel: form.confidentialityLevel as any,
         highLevelIdea: form.highLevelIdea,
         city: form.city,
         country: form.country,
-        status: "draft" as any,
       });
-      toast.success("Post saved as draft!");
+      toast.success("Post saved as draft");
       router.push("/dashboard/my-posts");
     } catch {
       toast.error("Failed to save draft");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-48 w-full" />
+      </div>
+    );
+  }
+
+  if (!post) return null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/dashboard/posts">
+        <Link href="/dashboard/my-posts">
           <Button variant="ghost" size="icon" className="h-9 w-9">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Create Post</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Edit Post</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Share your project and find the right partner
+            Update your project details and collaboration preferences
           </p>
         </div>
       </div>
@@ -177,9 +223,9 @@ export default function CreatePostPage() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
+                <Label htmlFor="edit-title">Title *</Label>
                 <Input
-                  id="title"
+                  id="edit-title"
                   placeholder="e.g., AI-Powered Cardiac Arrhythmia Detection"
                   value={form.title}
                   onChange={(e) => updateForm("title", e.target.value)}
@@ -234,10 +280,10 @@ export default function CreatePostPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
+                <Label htmlFor="edit-description">Description *</Label>
                 <Textarea
-                  id="description"
-                  placeholder="Describe your project, what you're building, and what kind of partner you're looking for..."
+                  id="edit-description"
+                  placeholder="Describe your project..."
                   value={form.description}
                   onChange={(e) => updateForm("description", e.target.value)}
                   className="min-h-28"
@@ -245,9 +291,9 @@ export default function CreatePostPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="expertise">Required Expertise</Label>
+                <Label htmlFor="edit-expertise">Required Expertise</Label>
                 <Input
-                  id="expertise"
+                  id="edit-expertise"
                   placeholder="e.g., Cardiology, ECG Analysis, Clinical Validation (comma-separated)"
                   value={form.expertise}
                   onChange={(e) => updateForm("expertise", e.target.value)}
@@ -314,7 +360,9 @@ export default function CreatePostPage() {
                 <Label>Confidentiality Level</Label>
                 <Select
                   value={form.confidentialityLevel}
-                  onValueChange={(v) => updateForm("confidentialityLevel", v)}
+                  onValueChange={(v) =>
+                    updateForm("confidentialityLevel", v)
+                  }
                 >
                   <SelectTrigger className="h-11">
                     <SelectValue />
@@ -330,18 +378,18 @@ export default function CreatePostPage() {
                 </Select>
               </div>
 
-              {user?.role === "engineer" && (
-                <div className="space-y-2">
-                  <Label htmlFor="idea">High-Level Idea</Label>
-                  <Textarea
-                    id="idea"
-                    placeholder="Share a high-level idea without revealing sensitive details..."
-                    value={form.highLevelIdea}
-                    onChange={(e) => updateForm("highLevelIdea", e.target.value)}
-                    className="min-h-20"
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="edit-idea">High-Level Idea</Label>
+                <Textarea
+                  id="edit-idea"
+                  placeholder="Share a high-level idea without revealing sensitive details..."
+                  value={form.highLevelIdea}
+                  onChange={(e) =>
+                    updateForm("highLevelIdea", e.target.value)
+                  }
+                  className="min-h-20"
+                />
+              </div>
             </div>
           </motion.div>
 
@@ -359,9 +407,9 @@ export default function CreatePostPage() {
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="post-city">City</Label>
+                  <Label htmlFor="edit-city">City</Label>
                   <Input
-                    id="post-city"
+                    id="edit-city"
                     placeholder="City"
                     value={form.city}
                     onChange={(e) => updateForm("city", e.target.value)}
@@ -369,9 +417,9 @@ export default function CreatePostPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="post-country">Country</Label>
+                  <Label htmlFor="edit-country">Country</Label>
                   <Input
-                    id="post-country"
+                    id="edit-country"
                     placeholder="Country"
                     value={form.country}
                     onChange={(e) => updateForm("country", e.target.value)}
@@ -382,15 +430,20 @@ export default function CreatePostPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="expiry" className="flex items-center gap-1.5">
+                  <Label
+                    htmlFor="edit-expiry"
+                    className="flex items-center gap-1.5"
+                  >
                     <Calendar className="h-3.5 w-3.5" />
                     Expiry Date
                   </Label>
                   <Input
-                    id="expiry"
+                    id="edit-expiry"
                     type="date"
                     value={form.expiryDate}
-                    onChange={(e) => updateForm("expiryDate", e.target.value)}
+                    onChange={(e) =>
+                      updateForm("expiryDate", e.target.value)
+                    }
                     className="h-11"
                   />
                 </div>
@@ -403,7 +456,7 @@ export default function CreatePostPage() {
                       onCheckedChange={(v) => updateForm("autoClose", v)}
                     />
                     <span className="text-sm text-muted-foreground">
-                      Close automatically when partner is found
+                      Close when partner is found
                     </span>
                   </div>
                 </div>
@@ -416,28 +469,32 @@ export default function CreatePostPage() {
               type="button"
               variant="outline"
               onClick={handleSaveAsDraft}
-              disabled={loading}
+              disabled={saving}
               className="gap-1.5"
             >
               <Save className="h-4 w-4" />
               Save as Draft
             </Button>
             <div className="flex items-center gap-3">
-              <Link href="/dashboard/posts">
+              <Link href="/dashboard/my-posts">
                 <Button variant="outline" type="button">
                   Cancel
                 </Button>
               </Link>
-              <Button type="submit" disabled={loading} className="gap-1.5 px-6">
-                {loading ? (
+              <Button
+                type="submit"
+                disabled={saving}
+                className="gap-1.5 px-6"
+              >
+                {saving ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Publishing...
+                    Saving...
                   </span>
                 ) : (
                   <>
                     <Send className="h-4 w-4" />
-                    Publish Post
+                    Save Changes
                   </>
                 )}
               </Button>
