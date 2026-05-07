@@ -1,90 +1,135 @@
 <div align="center">
-  <br />
-  <h1>⚕️ Health AI Co-Creation Platform</h1>
-  
-  <p>
-    <strong>A highly dynamic, cross-disciplinary networking and innovation hub for Healthcare Professionals and Technical Engineers.</strong>
-  </p>
+  <img src="https://img.icons8.com/fluency/96/medical-heart.png" alt="HealthAI Logo" width="80" />
+  <h1>⚕️ Health AI Co-Creation & Innovation Platform</h1>
+  <p><strong>Bridging the Gap Between Clinical Expertise and Engineering Excellence</strong></p>
 
-  <p>
-    <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" />
-    <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
-    <img src="https://img.shields.io/badge/Zustand-4A4A55?style=for-the-badge&logo=react&logoColor=white" alt="Zustand" />
-  </p>
+  <div>
+    <img src="https://img.shields.io/badge/Next.js-15.1-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" />
+    <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
+    <img src="https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
+    <img src="https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma&logoColor=white" />
+    <img src="https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&logo=sqlite&logoColor=white" />
+  </div>
+
   <br />
+
+  <p align="center">
+    <a href="#-the-vision">Vision</a> •
+    <a href="#-demonstration-video">Demo</a> •
+    <a href="#-key-features">Features</a> •
+    <a href="#-project-documentation">Documentation</a> •
+    <a href="#-technical-stack">Stack</a> •
+    <a href="#-getting-started">Setup</a>
+  </p>
 </div>
 
-<br/>
+---
 
 ## 🌐 The Vision
 
-The **Health AI Co-Creation Platform** fundamentally rewrites how multidisciplinary med-tech innovation occurs. Too often, brilliant clinical concepts fail due to a lack of dedicated engineering resources, while powerful AI algorithms struggle to find real-world medical validation. Our platform bridges this definitive gap, establishing a structured, sleek, and highly professional ecosystem where high-impact ideas meet execution.
+The **Health AI Co-Creation Platform** is a specialized networking and innovation hub designed to connect **Healthcare Professionals** and **Technical Engineers**. 
 
-**SENG 384 — Software Project IV**  
-*This initiative was conceptualized, designed, and developed to demonstrate enterprise-level frontend architecture, flawlessly responsive UI design, and professional software development lifecycles.*
-
----
-
-## ⚡ Key Highlights
-
-- **Intelligent Announcement Feeds:** Engineers and healthcare domain experts can post and browse highly specific collaboration requests detailing project stages, needed commitments, and targeted medical fields.
-- **Asymmetric Matchmaking:** Find the missing piece to your innovation puzzle through multi-variable filtering, local city highlights, and dynamic expertise skill-tagging.
-- **Protected Interaction Layer:** Features a strategic digital NDA agreement flow, ensuring concept safety during initial connection and meeting requests.
-- **Professional User Experience:** Built with extreme focus on accessibility, dynamic micro-animations, and a highly polished minimalistic design to ensure a zero-friction experience for professionals.
+In the modern medical landscape, breakthrough innovations often stall because clinical experts lack technical resources, while engineers struggle to find real-world medical validation. Our platform eliminates this friction by providing a **secure, structured, and high-trust ecosystem** where multidisciplinary teams can discover partners, exchange ideas under NDAs, and initiate high-impact collaborations.
 
 ---
 
-## 🏛️ System Specification
+## 🎥 Demonstration Video
 
-All underlying platform logic, rulesets, permissions, structural constraints, and functional/non-functional demands are rigorously documented within our comprehensive system document. 
+Experience the platform in action. This video walkthrough covers the entire user journey, from registration with `.edu` verification to creating posts and scheduling meetings.
 
 <div align="center">
-  <blockquote>
-    <h3>📄 <a href="./HealthAI_Platform_SRS.docx">HealthAI_Platform_SRS.docx</a></h3>
-    <p><em>Review the official project specifications containing use-case matrices, robust role hierarchies, and the platform data models.</em></p>
-  </blockquote>
+  <a href="https://www.youtube.com/watch?v=CUkxzkFtIuA">
+    <img src="https://img.youtube.com/vi/CUkxzkFtIuA/maxresdefault.jpg" alt="Health AI Demo Video" style="width:100%; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+    <br />
+    <sub>▶ Click to watch the project demonstration</sub>
+  </a>
 </div>
 
-<br/>
+---
+
+## ✨ Key Features
+
+### 👨‍⚕️ For Healthcare Professionals
+- **Pitch Your Ideas:** Share clinical challenges or innovation concepts with a technical audience.
+- **Find Technical Partners:** Search for engineers with specific expertise (AI, Robotics, Web, etc.).
+- **Localized Matching:** Discover potential collaborators in your city.
+
+### 💻 For Engineers & Researchers
+- **Discover Medical Projects:** Browse curated clinical collaboration requests.
+- **Expertise Tagging:** Highlight your technical skills to attract the right medical partners.
+- **Secure Onboarding:** Structured meeting requests with built-in digital NDA acceptance.
+
+### 🛡️ Core Platform Security
+- **Institutional Guardrails:** Registration is strictly restricted to verified `.edu` email addresses.
+- **Data Privacy:** No medical records or patient data are allowed; the platform focuses entirely on partner discovery.
+- **Full Audit Trail:** Every state-changing action is logged for administrative transparency.
+- **GDPR Compliance:** Users can export or permanently delete their data at any time.
 
 ---
 
-## 🏗️ Technical Architecture & Stack
+## 📄 Project Documentation
 
-By leveraging a bleeding-edge, type-safe stack, the platform guarantees rapid render interactions, absolute maintainability, and a pristine developer experience.
+The project is backed by comprehensive engineering documentation covering the entire Software Development Life Cycle (SDLC).
 
-* **Framework:** Next.js (App Router) powering fast, scalable, and highly optimized routing.
-* **Core Language:** Written comprehensively in `TypeScript` for strict static type-checking and robust IntelliSense.
-* **Styling & Theming:** `Tailwind CSS` fused with `Radix UI Primitives`, ensuring zero-runtime styling overhead, perfect dark modes, and fully accessible components.
-* **State Management:** `Zustand` implemented for lightweight, highly scalable, and unopinionated global state architectures.
-
----
-
-## 🚀 Quick Setup & Installation
-
-Deploying the application locally is streamlined to take just seconds.
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/mehmeterguden/healthtech-collaboration-hub.git
-
-# 2. Enter the working directory
-cd healthtech-collaboration-hub
-
-# 3. Install core dependencies
-npm install
-
-# 4. Fire up the development environment
-npm run dev
-```
-
-> **Note:** The local application will bind and instantly visualize at `http://localhost:3000`
+| Document | Description | Link |
+| :--- | :--- | :--- |
+| **User Guide** | Step-by-step instructions for all user roles and platform features. | [📄 View User Guide](./HealthAI_UserGuide.docx) |
+| **SRS (Requirements)** | Software Requirements Specification detailing functional and non-functional demands. | [📄 View SRS](./HealthAI_SRS.docx) |
+| **SDD (Architecture)** | Software Design Document covering system architecture, ER diagrams, and API design. | [📄 View SDD](./HealthAI_SDD.docx) |
 
 ---
 
-<br/>
+## 🏗️ Technical Stack
+
+Built with a focus on **Type-Safety**, **Performance**, and **Scalability**.
+
+- **Frontend:** [Next.js 15](https://nextjs.org/) (App Router), [React 19](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/)
+- **State Management:** [Zustand](https://zustand-demo.pmnd.rs/) (Lightweight Global Store)
+- **Animations:** [Framer Motion](https://www.framer.com/motion/)
+- **Backend:** Next.js API Routes (Serverless ready)
+- **Database:** [SQLite](https://sqlite.org/) with [Prisma ORM](https://www.prisma.io/)
+- **Authentication:** Custom JWT-based session management with HTTP-only cookies
+- **UI Components:** [Radix UI](https://www.radix-ui.com/) & [Lucide Icons](https://lucide.dev/)
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18.x or higher
+- npm or yarn
+
+### Installation Steps
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/mehmeterguden/healthtech-collaboration-hub.git
+   cd healthtech-collaboration-hub
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Database Setup:**
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   npx prisma db seed
+   ```
+
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+
+5. **Access the platform:**
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
 
 <div align="center">
-  <p>Engineered with pixel-perfect precision & architectural rigidity.</p>
+  <p><strong>SENG 384 — Software Project IV</strong></p>
+  <p>Developed with ❤️ by Mehmet Can Ergüden</p>
 </div>

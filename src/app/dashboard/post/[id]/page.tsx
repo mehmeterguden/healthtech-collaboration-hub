@@ -815,7 +815,7 @@ export default function PostDetailPage() {
                                 Request Link
                               </Button>
                               <Button 
-                                variant="primary" 
+                                variant="default" 
                                 size="sm" 
                                 className="h-9 text-[11px] font-black uppercase tracking-tight bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 px-4"
                                 onClick={() => {
