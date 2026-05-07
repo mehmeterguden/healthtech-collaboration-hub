@@ -32,16 +32,35 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       data: {
         status: "scheduled",
         selectedSlot: JSON.stringify(selectedSlot),
-        meetingLink: `https://meet.healthai.edu/${Math.random().toString(36).substring(7)}`, // Mock link
+        meetingLink: null, // No automatic link
       },
       include: { post: true, requester: true, receiver: true },
     });
 
+    // Automatically update post status to meeting_scheduled
+    await prisma.post.update({
+      where: { id: meeting.postId },
+      data: { status: "meeting_scheduled" },
+    });
+
+    const timeStr = `${selectedSlot.date} at ${selectedSlot.startTime}`;
+
+    // Notification for Requester
     await prisma.notification.create({
       data: {
         userId: meeting.requesterId,
         type: "meeting_accepted",
-        message: `${user.firstName} ${user.lastName} accepted your meeting request`,
+        message: `Meeting Confirmed: ${user.firstName} accepted your request for ${timeStr}`,
+        linkTo: "/dashboard/meetings",
+      },
+    });
+
+    // Notification for Receiver (Self confirmation)
+    await prisma.notification.create({
+      data: {
+        userId: user.id,
+        type: "meeting_scheduled",
+        message: `You scheduled a meeting with ${meeting.requester.firstName} for ${timeStr}`,
         linkTo: "/dashboard/meetings",
       },
     });

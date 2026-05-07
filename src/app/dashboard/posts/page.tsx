@@ -16,7 +16,8 @@ export default function PostsPage() {
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get("search") || "";
   
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [allPosts, setAllPosts] = useState<Post[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     search: initialSearch,
@@ -27,31 +28,61 @@ export default function PostsPage() {
     status: "",
   });
 
-  // Sync filters with URL search params (for global header search)
+  // Sync filters with URL search params
   useEffect(() => {
     const query = searchParams.get("search") || "";
-    setFilters(prev => ({ ...prev, search: query }));
+    if (query) {
+      setFilters(prev => ({ ...prev, search: query }));
+    }
   }, [searchParams]);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        const result = await postsApi.getAll({
-          search: filters.search || undefined,
-          domain: filters.domain || undefined,
-          city: filters.city || undefined,
-          country: filters.country || undefined,
-          stage: filters.stage || undefined,
-          status: (filters.status as Post["status"]) || undefined,
-        });
-        setPosts(result);
+        const result = await postsApi.getAll(); // Fetch everything
+        setAllPosts(result);
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, [filters]);
+  }, []);
+
+  useEffect(() => {
+    let result = [...allPosts];
+
+    if (filters.search) {
+      const s = filters.search.toLowerCase();
+      result = result.filter(p => 
+        p.title.toLowerCase().includes(s) || 
+        p.description.toLowerCase().includes(s) ||
+        p.domain.toLowerCase().includes(s)
+      );
+    }
+
+    if (filters.domain) {
+      result = result.filter(p => p.domain === filters.domain);
+    }
+
+    if (filters.city) {
+      result = result.filter(p => p.city === filters.city);
+    }
+
+    if (filters.country) {
+      result = result.filter(p => p.country === filters.country);
+    }
+
+    if (filters.stage) {
+      result = result.filter(p => p.projectStage === filters.stage);
+    }
+
+    if (filters.status) {
+      result = result.filter(p => p.status === filters.status);
+    }
+
+    setFilteredPosts(result);
+  }, [filters, allPosts]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -81,6 +112,7 @@ export default function PostsPage() {
         <div className="w-full lg:w-72 shrink-0">
           <PostFilters
             filters={filters}
+            allPosts={allPosts}
             onFilterChange={handleFilterChange}
             onClear={handleClear}
           />
@@ -102,7 +134,7 @@ export default function PostsPage() {
                 </div>
               ))}
             </div>
-          ) : posts.length === 0 ? (
+          ) : filteredPosts.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -119,10 +151,10 @@ export default function PostsPage() {
           ) : (
             <>
               <div className="mb-4 text-sm text-muted-foreground">
-                {posts.length} post{posts.length !== 1 ? "s" : ""} found
+                {filteredPosts.length} post{filteredPosts.length !== 1 ? "s" : ""} found
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                {posts.map((post, i) => (
+                {filteredPosts.map((post, i) => (
                   <PostCard
                     key={post.id}
                     post={post}

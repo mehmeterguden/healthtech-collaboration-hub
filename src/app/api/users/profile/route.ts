@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth, sanitizeUser, clearSessionCookie } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
+import bcrypt from "bcryptjs";
 
 export async function GET(req: Request) {
   try {
@@ -48,6 +49,16 @@ export async function PATCH(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const user = await requireAuth();
+    const { password } = await req.json();
+
+    if (!password) {
+      return NextResponse.json({ error: "Password is required" }, { status: 400 });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
+    }
 
     await prisma.user.delete({
       where: { id: user.id },

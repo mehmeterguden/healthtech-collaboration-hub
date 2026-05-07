@@ -24,13 +24,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Search, Ban, CheckCircle, Mail, Building2 } from "lucide-react";
+import { Search, Ban, CheckCircle, Mail, Building2, Eye, Calendar, User as UserIcon, Activity } from "lucide-react";
 import { format } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const roleLabels: Record<string, string> = {
   engineer: "Engineer",
   healthcare: "Healthcare",
   admin: "Admin",
+};
+
+const statusLabels: Record<string, string> = {
+  active: "Active",
+  suspended: "Suspended",
 };
 
 const roleColors: Record<string, string> = {
@@ -44,6 +55,9 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [viewUser, setViewUser] = useState<User | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -90,7 +104,14 @@ export default function AdminUsersPage() {
       u.email.toLowerCase().includes(search.toLowerCase()) ||
       u.institution.toLowerCase().includes(search.toLowerCase());
     const matchRole = !roleFilter || u.role === roleFilter;
-    return matchSearch && matchRole;
+    const matchStatus = !statusFilter || (statusFilter === "active" ? u.isActive : !u.isActive);
+    
+    let matchDate = true;
+    if (selectedDate) {
+      matchDate = format(new Date(u.createdAt), "yyyy-MM-dd") === selectedDate;
+    }
+
+    return matchSearch && matchRole && matchStatus && matchDate;
   });
 
   return (
@@ -113,18 +134,67 @@ export default function AdminUsersPage() {
           />
         </div>
         <Select
-          value={roleFilter || undefined}
-          onValueChange={(v) => setRoleFilter(v)}
+          value={roleFilter || "all"}
+          onValueChange={(v) => setRoleFilter(v === "all" ? "" : v)}
         >
           <SelectTrigger className="w-40 h-9">
             <SelectValue placeholder="All roles" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">All Roles</SelectItem>
             <SelectItem value="engineer">Engineer</SelectItem>
             <SelectItem value="healthcare">Healthcare</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
           </SelectContent>
         </Select>
+
+        <Select
+          value={statusFilter || "all"}
+          onValueChange={(v) => setStatusFilter(v === "all" ? "" : v)}
+        >
+          <SelectTrigger className="w-40 h-9">
+            <SelectValue placeholder="All status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="suspended">Suspended</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={selectedDate || "all"}
+          onValueChange={(v) => setSelectedDate(v === "all" ? "" : v)}
+        >
+          <SelectTrigger className="w-48 h-9 bg-card border-border text-foreground">
+            <div className="flex items-center gap-2 truncate">
+              <Calendar className="h-4 w-4 text-primary" />
+              <SelectValue placeholder="Registration Date" />
+            </div>
+          </SelectTrigger>
+          <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+            <SelectItem value="all">All Dates</SelectItem>
+            {Array.from(new Set(users.map(u => format(new Date(u.createdAt), "yyyy-MM-dd"))))
+              .sort((a, b) => b.localeCompare(a))
+              .map(date => (
+                <SelectItem key={date} value={date}>
+                  {format(new Date(date), "MMM d, yyyy")}
+                </SelectItem>
+              ))
+            }
+          </SelectContent>
+        </Select>
+
+        {selectedDate && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setSelectedDate("")}
+            className="h-9 px-2 text-xs text-destructive hover:bg-destructive/10"
+          >
+            Clear Date
+          </Button>
+        )}
       </div>
 
       <motion.div
@@ -227,28 +297,32 @@ export default function AdminUsersPage() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`h-7 text-xs gap-1 ${
-                        user.isActive
-                          ? "text-destructive hover:text-destructive"
-                          : "text-emerald-400 hover:text-emerald-400"
-                      }`}
-                      onClick={() => handleToggleStatus(user)}
-                    >
-                      {user.isActive ? (
-                        <>
-                          <Ban className="h-3 w-3" />
-                          Suspend
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="h-3 w-3" />
-                          Activate
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setViewUser(user)}
+                        className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-8 w-8 ${
+                          user.isActive
+                            ? "text-red-500 hover:text-red-600 hover:bg-red-50"
+                            : "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50"
+                        }`}
+                        onClick={() => handleToggleStatus(user)}
+                      >
+                        {user.isActive ? (
+                          <Ban className="h-4 w-4" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -256,6 +330,116 @@ export default function AdminUsersPage() {
           </Table>
         )}
       </motion.div>
+
+      {/* User Profile Modal */}
+      <Dialog open={!!viewUser} onOpenChange={(open) => !open && setViewUser(null)}>
+        <DialogContent className="max-w-3xl border-none bg-slate-900 text-white p-0 overflow-hidden">
+          {viewUser && (
+            <div className="flex flex-col">
+              {/* Header */}
+              <div className="p-8 bg-gradient-to-br from-blue-600 to-indigo-700">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md text-2xl font-bold text-white border border-white/30">
+                    {viewUser.firstName[0]}{viewUser.lastName[0]}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h2 className="text-3xl font-bold text-white tracking-tight">
+                        {viewUser.firstName} {viewUser.lastName}
+                      </h2>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${roleColors[viewUser.role]}`}>
+                        {roleLabels[viewUser.role]}
+                      </span>
+                    </div>
+                    <p className="text-white/80 flex items-center gap-2">
+                      <Mail className="h-4 w-4" /> {viewUser.email}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-8">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10 flex-1">
+                    <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-1">Institution</p>
+                    <p className="text-white font-medium flex items-center gap-2">
+                      <Building2 className="h-4 w-4" /> {viewUser.institution}
+                    </p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10 flex-1">
+                    <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-1">Joined Date</p>
+                    <p className="text-white font-medium flex items-center gap-2">
+                      <Calendar className="h-4 w-4" /> {format(new Date(viewUser.createdAt), "MMMM d, yyyy")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="p-8 bg-slate-950/50 backdrop-blur-xl space-y-8">
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-blue-500/20 rounded-lg">
+                        <Activity className="h-4 w-4 text-blue-400" />
+                      </div>
+                      <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Post Count</span>
+                    </div>
+                    <p className="text-2xl font-bold text-white">{viewUser.postCount}</p>
+                  </div>
+                  <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-emerald-500/20 rounded-lg">
+                        <CheckCircle className="h-4 w-4 text-emerald-400" />
+                      </div>
+                      <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Meetings</span>
+                    </div>
+                    <p className="text-2xl font-bold text-white">{viewUser.meetingCount}</p>
+                  </div>
+                  <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-primary/20 rounded-lg">
+                        <UserIcon className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Completeness</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Progress value={viewUser.profileCompleteness} className="h-2 flex-1" />
+                      <span className="text-sm font-bold text-white">{viewUser.profileCompleteness}%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bio / About */}
+                <div className="space-y-3">
+                  <h4 className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                    <div className="h-px w-4 bg-slate-700" /> Professional Bio
+                  </h4>
+                  <div className="bg-slate-900/50 rounded-xl p-5 border border-slate-800/50 text-slate-300 leading-relaxed">
+                    {viewUser.bio || "No professional bio provided yet."}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="pt-8 border-t border-slate-800 flex justify-end gap-4">
+                  <Button variant="ghost" onClick={() => setViewUser(null)} className="text-slate-400 hover:text-white">
+                    Close
+                  </Button>
+                  <Button
+                    variant={viewUser.isActive ? "destructive" : "default"}
+                    onClick={() => {
+                      handleToggleStatus(viewUser);
+                      setViewUser(null);
+                    }}
+                    className={viewUser.isActive ? "bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white" : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white"}
+                  >
+                    {viewUser.isActive ? "Suspend Account" : "Activate Account"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -148,6 +148,17 @@ async function main() {
       city: "Izmir",
       expertise: ["Orthopedics", "Rehabilitation"],
     },
+    {
+      id: "test-delete-user",
+      slug: "test-delete-slug",
+      email: "delete-me@healthai.edu",
+      firstName: "Test",
+      lastName: "Delete",
+      role: "engineer",
+      institution: "Test Lab",
+      city: "Istanbul",
+      expertise: ["Testing"],
+    },
   ];
 
   const createdUsers: any[] = [];
@@ -179,6 +190,7 @@ async function main() {
   // Demo-engineer's posts
   const engPost1 = await prisma.post.create({
     data: {
+      id: "demo-post-eng-1",
       authorId: "demo-engineer",
       title: "AI-Powered ECG Anomaly Detection System",
       domain: "Cardiology Imaging",
@@ -197,9 +209,11 @@ async function main() {
       autoClose: true,
     },
   });
+  console.log("Created engPost1");
 
   const engPost2 = await prisma.post.create({
     data: {
+      id: "demo-post-eng-2",
       authorId: "demo-engineer",
       title: "IoT Remote Patient Monitoring Platform",
       domain: "IoT Healthcare",
@@ -218,9 +232,11 @@ async function main() {
       autoClose: false,
     },
   });
+  console.log("Created engPost2");
 
   const engPost3 = await prisma.post.create({
     data: {
+      id: "demo-post-eng-3",
       authorId: "demo-engineer",
       title: "Surgical Robot Navigation via Computer Vision",
       domain: "Surgical Robotics",
@@ -239,10 +255,12 @@ async function main() {
       autoClose: false,
     },
   });
+  console.log("Created engPost3");
 
   // Demo-healthcare's posts
   const hcPost1 = await prisma.post.create({
     data: {
+      id: "demo-post-hc-1",
       authorId: "demo-healthcare",
       title: "Clinical Decision Support for Cardiac ICU",
       domain: "Cardiology Imaging",
@@ -264,6 +282,7 @@ async function main() {
 
   const hcPost2 = await prisma.post.create({
     data: {
+      id: "demo-post-hc-2",
       authorId: "demo-healthcare",
       title: "Drug Interaction Alert System for Emergency Dept",
       domain: "Telemedicine",
@@ -424,6 +443,39 @@ async function main() {
     },
   });
 
+  // 13) NEW INCOMING for demo-engineer: from user-doc-3 (pending)
+  await prisma.meetingRequest.create({
+    data: {
+      postId: engPost2.id,
+      requesterId: "user-doc-3",
+      receiverId: "demo-engineer",
+      message: "I've been looking for an IoT solution for our stroke rehabilitation unit. Your vital sign monitoring platform could be a perfect fit.",
+      proposedSlots: JSON.stringify([
+        { id: "s-new-in1-a", date: "2026-05-25", startTime: "10:00", endTime: "11:00" },
+        { id: "s-new-in1-b", date: "2026-05-26", startTime: "14:00", endTime: "15:00" },
+      ]),
+      status: "pending",
+      ndaAccepted: true,
+    },
+  });
+
+  // 14) ANOTHER INCOMING for demo-engineer: from user-doc-1 (pending)
+  await prisma.meetingRequest.create({
+    data: {
+      postId: engPost3.id,
+      requesterId: "user-doc-1",
+      receiverId: "demo-engineer",
+      message: "Our surgical team is interested in testing your computer vision system for tracking laparoscopic instruments.",
+      proposedSlots: JSON.stringify([
+        { id: "s-new-in2-a", date: "2026-05-28", startTime: "09:00", endTime: "10:00" },
+        { id: "s-new-in2-b", date: "2026-05-29", startTime: "11:00", endTime: "12:00" },
+        { id: "s-new-in2-c", date: "2026-06-01", startTime: "15:00", endTime: "16:00" },
+      ]),
+      status: "pending",
+      ndaAccepted: true,
+    },
+  });
+
   // ── Meeting requests for demo-healthcare ───────────────────────────────────
   // 7) INCOMING for demo-healthcare: from user-eng-1 (pending)
   await prisma.meetingRequest.create({
@@ -508,6 +560,28 @@ async function main() {
       ndaAccepted: true,
     },
   });
+
+  // ─── Interests ─────────────────────────────────────────────────────────────
+  // Adding interests to demo-engineer's posts to show activity in "My Posts"
+  const interestsData = [
+    { postId: engPost1.id, userId: "user-doc-1" },
+    { postId: engPost1.id, userId: "user-doc-2" },
+    { postId: engPost1.id, userId: "demo-healthcare" },
+    { postId: engPost2.id, userId: "user-doc-3" },
+    { postId: engPost2.id, userId: "user-doc-4" },
+    { postId: engPost3.id, userId: "user-doc-1" },
+    { postId: engPost3.id, userId: "user-doc-2" },
+  ];
+
+  for (const interest of interestsData) {
+    await prisma.interest.create({
+      data: {
+        postId: interest.postId,
+        userId: interest.userId,
+        message: "I am very interested in this project and would like to collaborate!",
+      },
+    });
+  }
 
   // ─── Notifications ────────────────────────────────────────────────────────
   await prisma.notification.createMany({

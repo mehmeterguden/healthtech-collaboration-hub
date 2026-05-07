@@ -54,6 +54,8 @@ export default function SettingsPage() {
     confirmPassword: "",
   });
   const [pwLoading, setPwLoading] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const handleSave = async () => {
     setLoading(true);
@@ -85,13 +87,20 @@ export default function SettingsPage() {
   };
 
   const handleDelete = async () => {
+    if (!deletePassword) {
+      toast.error("Please enter your password to confirm");
+      return;
+    }
+    setDeleting(true);
     try {
-      await usersApi.deleteAccount();
-      toast.success("Account deleted");
+      await usersApi.deleteAccount(deletePassword);
+      toast.success("Account deleted successfully");
       logout();
       window.location.href = "/";
-    } catch {
-      toast.error("Failed to delete account");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete account. Please check your password.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -441,28 +450,53 @@ export default function SettingsPage() {
                     Delete Account
                   </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 pt-2">
-                  <p className="text-sm text-muted-foreground">
-                    This action is irreversible. All your data, posts, and
-                    meeting history will be permanently deleted.
-                  </p>
-                  <div className="flex justify-end gap-3">
-                    <Button
-                      variant="outline"
-                      onClick={() => setDeleteDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={handleDelete}
-                      className="gap-1.5"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete Permanently
-                    </Button>
+                  <div className="space-y-4 pt-2">
+                    <p className="text-sm text-muted-foreground">
+                      This action is irreversible. All your data, posts, and
+                      meeting history will be permanently deleted.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="delete-confirm-pw">Enter Password to Confirm</Label>
+                      <Input
+                        id="delete-confirm-pw"
+                        type="password"
+                        placeholder="Your password"
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                        className="h-10"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setDeleteDialogOpen(false);
+                          setDeletePassword("");
+                        }}
+                        disabled={deleting}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="gap-1.5"
+                      >
+                        {deleting ? (
+                          <span className="flex items-center gap-2">
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            Deleting...
+                          </span>
+                        ) : (
+                          <>
+                            <Trash2 className="h-4 w-4" />
+                            Delete Permanently
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
-                </div>
               </DialogContent>
             </Dialog>
           </div>

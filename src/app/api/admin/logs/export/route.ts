@@ -20,7 +20,16 @@ export async function GET() {
       targetEntity: "audit_log",
     });
 
-    return NextResponse.json({ downloadUrl: "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(logs, null, 2)) });
+    const csvHeader = "ID,Timestamp,User,Role,Action,Target,Status,IP\n";
+    const csvRows = logs.map(l => 
+      `"${l.id}","${new Date(l.timestamp).toISOString()}","${l.userName}","${l.userRole}","${l.actionType}","${l.targetEntity}","${l.resultStatus}","${l.ipAddress || ""}"`
+    ).join("\n");
+    
+    const csvContent = csvHeader + csvRows;
+
+    return NextResponse.json({ 
+      downloadUrl: "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent) 
+    });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

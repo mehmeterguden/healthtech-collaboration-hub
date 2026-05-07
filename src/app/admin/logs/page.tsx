@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Search, Download, AlertTriangle, CheckCircle } from "lucide-react";
+import { Search, Download, AlertTriangle, CheckCircle, Calendar } from "lucide-react";
 import { format } from "date-fns";
 
 const actionLabels: Record<string, string> = {
@@ -63,6 +63,7 @@ export default function AdminLogsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -83,7 +84,7 @@ export default function AdminLogsPage() {
       const result = await adminApi.exportLogs();
       const link = document.createElement("a");
       link.href = result.downloadUrl;
-      link.download = "healthai-audit-logs.json";
+      link.download = `healthai-audit-logs-${format(new Date(), "yyyy-MM-dd")}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -94,13 +95,21 @@ export default function AdminLogsPage() {
   };
 
   const filtered = logs.filter((l) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      l.userName.toLowerCase().includes(q) ||
-      l.actionType.toLowerCase().includes(q) ||
-      l.targetEntity.toLowerCase().includes(q)
-    );
+    let matchSearch = true;
+    if (search) {
+      const q = search.toLowerCase();
+      matchSearch = 
+        l.userName.toLowerCase().includes(q) ||
+        l.actionType.toLowerCase().includes(q) ||
+        l.targetEntity.toLowerCase().includes(q);
+    }
+    
+    let matchDate = true;
+    if (selectedDate) {
+      matchDate = format(new Date(l.timestamp), "yyyy-MM-dd") === selectedDate;
+    }
+
+    return matchSearch && matchDate;
   });
 
   return (
@@ -148,6 +157,40 @@ export default function AdminLogsPage() {
             ))}
           </SelectContent>
         </Select>
+
+        <Select
+          value={selectedDate || "all"}
+          onValueChange={(v) => setSelectedDate(v === "all" ? "" : v)}
+        >
+          <SelectTrigger className="w-48 h-9 bg-card border-border text-foreground">
+            <div className="flex items-center gap-2 truncate">
+              <Calendar className="h-4 w-4 text-primary" />
+              <SelectValue placeholder="Log Date" />
+            </div>
+          </SelectTrigger>
+          <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+            <SelectItem value="all">All Dates</SelectItem>
+            {Array.from(new Set(logs.map(l => format(new Date(l.timestamp), "yyyy-MM-dd"))))
+              .sort((a, b) => b.localeCompare(a))
+              .map(date => (
+                <SelectItem key={date} value={date}>
+                  {format(new Date(date), "MMM d, yyyy")}
+                </SelectItem>
+              ))
+            }
+          </SelectContent>
+        </Select>
+
+        {selectedDate && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setSelectedDate("")}
+            className="h-9 px-2 text-xs text-destructive hover:bg-destructive/10"
+          >
+            Clear Date
+          </Button>
+        )}
       </div>
 
       <motion.div

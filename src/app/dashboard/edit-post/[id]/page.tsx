@@ -464,6 +464,41 @@ export default function EditPostPage() {
             </div>
           </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="rounded-xl border border-border bg-card p-6"
+          >
+            <div className="flex items-center gap-2 mb-5">
+              <Shield className="h-4 w-4 text-primary" />
+              <h2 className="text-base font-semibold">Post Management</h2>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Current Status</Label>
+                <Select
+                  value={form.status}
+                  onValueChange={(v) => updateForm("status", v)}
+                >
+                  <SelectTrigger className="h-11 font-medium">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="meeting_scheduled">Meeting Scheduled</SelectItem>
+                    <SelectItem value="partner_found">Partner Found</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Changing status manually will affect how others see your project.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
           <div className="flex items-center justify-between pt-2">
             <Button
               type="button"

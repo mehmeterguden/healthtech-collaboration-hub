@@ -39,10 +39,14 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const user = await requireAuth();
-    const { postId, receiverId, message, proposedSlots } = await req.json();
+    const { postId, receiverId, message, proposedSlots, ndaAccepted } = await req.json();
 
     if (!postId || !receiverId || !message || !proposedSlots || proposedSlots.length === 0) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    if (!ndaAccepted) {
+      return NextResponse.json({ error: "NDA acceptance is required" }, { status: 400 });
     }
 
     const meeting = await prisma.meetingRequest.create({

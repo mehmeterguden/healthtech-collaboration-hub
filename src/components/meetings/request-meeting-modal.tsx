@@ -6,7 +6,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogFooter 
+  DialogFooter,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +19,11 @@ import {
   Plus, 
   Trash2, 
   Send,
-  CalendarDays
+  CalendarDays,
+  ShieldCheck
 } from "lucide-react";
 import { format } from "date-fns";
+import { Switch } from "@/components/ui/switch";
 import { meetingsApi } from "@/lib/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -51,6 +54,7 @@ export function RequestMeetingModal({
   const [slots, setSlots] = useState<Slot[]>([
     { id: "1", date: "", startTime: "10:00", endTime: "11:00" }
   ]);
+  const [ndaAccepted, setNdaAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const addSlot = () => {
@@ -90,6 +94,11 @@ export function RequestMeetingModal({
       return;
     }
 
+    if (!ndaAccepted) {
+      toast.error("You must accept the Non-Disclosure Agreement (NDA) to proceed.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       await meetingsApi.create({
@@ -101,10 +110,12 @@ export function RequestMeetingModal({
           startTime,
           endTime,
         })),
+        ndaAccepted: true,
       });
       toast.success("Meeting request sent successfully!");
       onOpenChange(false);
       setMessage("");
+      setNdaAccepted(false);
       setSlots([{ id: "1", date: "", startTime: "10:00", endTime: "11:00" }]);
       if (onSuccess) onSuccess();
     } catch (error) {
@@ -219,6 +230,56 @@ export function RequestMeetingModal({
                   </motion.div>
                 ))}
               </AnimatePresence>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-4">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div className="flex-1 space-y-1">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="nda-accept" className="text-sm font-black text-white cursor-pointer uppercase tracking-tight">
+                  Accept NDA
+                </Label>
+                <Switch 
+                  id="nda-accept" 
+                  checked={ndaAccepted}
+                  onCheckedChange={setNdaAccepted}
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                I agree to maintain confidentiality regarding the sensitive project details.{" "}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="text-primary font-bold hover:underline">View Details</button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px] rounded-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-primary" />
+                        Non-Disclosure Agreement
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4 text-sm text-muted-foreground leading-relaxed">
+                      <p>
+                        This Non-Disclosure Agreement (NDA) ensures that all parties involved in the collaboration request for the Health AI Platform agree to maintain the strict confidentiality of the project ideas, technical specifications, and clinical data shared.
+                      </p>
+                      <p>
+                        By accepting, you agree not to disclose, share, or use any proprietary information for purposes other than the proposed collaboration without explicit written consent from the project owner.
+                      </p>
+                      <p className="font-semibold text-slate-900">
+                        Key terms include:
+                      </p>
+                      <ul className="list-disc pl-4 space-y-1">
+                        <li>Protection of sensitive medical/technical IP</li>
+                        <li>No unauthorized copying or distribution</li>
+                        <li>Agreement valid for 3 years from today</li>
+                      </ul>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </p>
             </div>
           </div>
         </div>

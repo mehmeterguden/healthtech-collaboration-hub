@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Since we rely on HTTP-only cookies, we might not have the raw token here.
         // That's fine, we just need the user object to signify they're logged in.
         setAuth(user, "cookie-based-token");
-        if (isPublicPath && pathname !== "/") {
+        if (isPublicPath && pathname !== "/" && pathname !== "/verify-email") {
           router.push("/dashboard");
         }
       } catch (error) {

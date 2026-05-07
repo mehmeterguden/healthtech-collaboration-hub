@@ -38,7 +38,10 @@ export default function AdminPostsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [domainFilter, setDomainFilter] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Post | null>(null);
+  const [viewPost, setViewPost] = useState<Post | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -71,8 +74,20 @@ export default function AdminPostsPage() {
       p.domain.toLowerCase().includes(search.toLowerCase()) ||
       p.author.firstName.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !statusFilter || p.status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchDomain = !domainFilter || p.domain === domainFilter;
+    
+    // Exact Date Filtering
+    if (selectedDate) {
+      const postDate = format(new Date(p.createdAt), "yyyy-MM-dd");
+      if (postDate !== selectedDate) return false;
+    }
+
+    return matchSearch && matchStatus && matchDomain;
+  }).sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
+
+  const uniqueDomains = Array.from(new Set(posts.map((p) => p.domain)));
 
   return (
     <div className="space-y-6">
@@ -94,13 +109,14 @@ export default function AdminPostsPage() {
           />
         </div>
         <Select
-          value={statusFilter || undefined}
-          onValueChange={(v) => setStatusFilter(v)}
+          value={statusFilter || "all"}
+          onValueChange={(v) => setStatusFilter(v === "all" ? "" : v)}
         >
-          <SelectTrigger className="w-44 h-9">
-            <SelectValue placeholder="All statuses" />
+          <SelectTrigger className="w-40 h-9">
+            <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="draft">Draft</SelectItem>
             <SelectItem value="meeting_scheduled">Meeting Scheduled</SelectItem>
@@ -108,6 +124,40 @@ export default function AdminPostsPage() {
             <SelectItem value="expired">Expired</SelectItem>
           </SelectContent>
         </Select>
+
+        <Select
+          value={domainFilter || "all"}
+          onValueChange={(v) => setDomainFilter(v === "all" ? "" : v)}
+        >
+          <SelectTrigger className="w-44 h-9">
+            <SelectValue placeholder="All Domains" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Domains</SelectItem>
+            {uniqueDomains.map((d) => (
+              <SelectItem key={d} value={d}>
+                {d}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="w-40 h-9"
+        />
+        {selectedDate && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setSelectedDate("")}
+            className="h-9 px-2 text-xs"
+          >
+            Clear Date
+          </Button>
+        )}
       </div>
 
       <motion.div
@@ -160,24 +210,22 @@ export default function AdminPostsPage() {
                     {format(new Date(post.createdAt), "MMM d, yyyy")}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex justify-end gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7"
-                        onClick={() =>
-                          (window.location.href = `/dashboard/post/${post.id}`)
-                        }
+                        onClick={() => setViewPost(post)}
+                        className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
                       >
-                        <Eye className="h-3.5 w-3.5" />
+                        <Eye className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
                         onClick={() => setDeleteTarget(post)}
+                        className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -188,6 +236,102 @@ export default function AdminPostsPage() {
         )}
       </motion.div>
 
+      {/* View Post Modal */}
+      <Dialog open={!!viewPost} onOpenChange={(open) => !open && setViewPost(null)}>
+        <DialogContent className="max-w-3xl border-none bg-slate-900 text-white p-0 overflow-hidden">
+          {viewPost && (
+            <div className="flex flex-col">
+              {/* Header with Gradient */}
+              <div className="p-8 bg-gradient-to-br from-indigo-600 to-blue-700">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-[0.2em] text-white border border-white/30">
+                    {viewPost.domain}
+                  </span>
+                  <PostStatusBadge status={viewPost.status} />
+                </div>
+                <h2 className="text-3xl font-bold text-white tracking-tight leading-tight">
+                  {viewPost.title}
+                </h2>
+              </div>
+
+              {/* Content */}
+              <div className="p-8 space-y-8 bg-slate-950/50 backdrop-blur-xl">
+                {/* Meta Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                  <div className="space-y-1">
+                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Author</p>
+                    <p className="text-slate-200 font-medium text-lg">
+                      {viewPost.author.firstName} {viewPost.author.lastName}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Created Date</p>
+                    <p className="text-slate-200 font-medium">
+                      {format(new Date(viewPost.createdAt), "MMM d, yyyy")}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Post ID</p>
+                    <p className="text-slate-400 font-mono text-xs truncate">
+                      {viewPost.id}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="space-y-3">
+                  <h4 className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                    <div className="h-px w-4 bg-slate-700" /> Description
+                  </h4>
+                  <div className="bg-slate-900/50 rounded-xl p-5 border border-slate-800/50 text-slate-300 leading-relaxed text-base">
+                    {viewPost.description}
+                  </div>
+                </div>
+
+                {/* Expertise */}
+                {viewPost.requiredExpertise && viewPost.requiredExpertise.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                      <div className="h-px w-4 bg-slate-700" /> Required Expertise
+                    </h4>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {viewPost.requiredExpertise.map((exp: string, i: number) => (
+                        <span key={i} className="px-4 py-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg text-xs font-semibold">
+                          {exp}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer Actions */}
+                <div className="pt-8 border-t border-slate-800 flex justify-end items-center gap-4">
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => setViewPost(null)}
+                    className="text-slate-400 hover:text-white hover:bg-slate-800"
+                  >
+                    Close
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => {
+                      setDeleteTarget(viewPost);
+                      setViewPost(null);
+                    }}
+                    className="bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all px-6"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Remove Post
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
       <Dialog
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}

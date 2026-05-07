@@ -55,6 +55,13 @@ export interface Post {
   updatedAt: string;
   interestCount: number;
   highLevelIdea?: string;
+  selectedPartnerId?: string;
+  selectedPartner?: User;
+  currentUserInteraction?: {
+    interest: Interest | null;
+    meetingRequest: MeetingRequest | null;
+  };
+  meetingRequests?: MeetingRequest[];
 }
 
 export interface Interest {

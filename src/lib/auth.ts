@@ -85,30 +85,22 @@ export async function requireAdmin() {
 }
 
 // Helper to serialize user for frontend (strip password)
-export function sanitizeUser(user: {
-  id: string;
-  slug: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  institution: string;
-  city: string;
-  country: string;
-  expertise: string;
-  bio: string;
-  avatarUrl: string;
-  profileCompleteness: number;
-  isActive: boolean;
-  lastLogin: Date | null;
-  createdAt: Date;
-  password?: string;
-}) {
-  const { password: _, ...safe } = user;
+export function sanitizeUser(user: any) {
+  const { password, ...safe } = user;
+  
+  let sanitizedExpertise = [];
+  try {
+    sanitizedExpertise = typeof safe.expertise === "string" 
+      ? JSON.parse(safe.expertise || "[]") 
+      : (Array.isArray(safe.expertise) ? safe.expertise : []);
+  } catch {
+    sanitizedExpertise = [];
+  }
+
   return {
     ...safe,
-    expertise: JSON.parse(safe.expertise || "[]"),
-    lastLogin: safe.lastLogin?.toISOString() || null,
-    createdAt: safe.createdAt.toISOString(),
+    expertise: sanitizedExpertise,
+    lastLogin: safe.lastLogin instanceof Date ? safe.lastLogin.toISOString() : (safe.lastLogin || null),
+    createdAt: safe.createdAt instanceof Date ? safe.createdAt.toISOString() : (safe.createdAt || new Date().toISOString()),
   };
 }

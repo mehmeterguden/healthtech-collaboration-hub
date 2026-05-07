@@ -14,7 +14,9 @@ export async function GET() {
     const sanitizedPosts = posts.map(post => ({
       ...post,
       author: sanitizeUser(post.author),
-      requiredExpertise: JSON.parse(post.requiredExpertise || "[]"),
+      requiredExpertise: typeof post.requiredExpertise === "string" 
+        ? JSON.parse(post.requiredExpertise || "[]") 
+        : (Array.isArray(post.requiredExpertise) ? post.requiredExpertise : []),
     }));
 
     return NextResponse.json(sanitizedPosts);

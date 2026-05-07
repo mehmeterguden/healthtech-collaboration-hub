@@ -12,18 +12,41 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { notificationsApi } from "@/lib/api";
 
 export function Topbar() {
   const user = useAuthStore((s) => s.user);
   const router = useRouter();
   const [search, setSearch] = useState("");
   
-  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+  const { notifications, unreadCount, setNotifications, markAsRead, markAllAsRead } =
     useNotificationStore();
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+
+  useEffect(() => {
+    async function fetchNotifications() {
+      try {
+        // Very robust check
+        if (typeof notificationsApi === "undefined" || !notificationsApi) {
+          console.warn("notificationsApi is not yet available");
+          return;
+        }
+        
+        const data = await notificationsApi.getAll();
+        setNotifications(data);
+      } catch (err) {
+        console.error("Failed to fetch notifications:", err);
+      }
+    }
+    if (user) {
+      fetchNotifications();
+      // Polling every 30 seconds for demo
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user, setNotifications]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

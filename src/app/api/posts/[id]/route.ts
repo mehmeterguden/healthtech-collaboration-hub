@@ -6,21 +6,73 @@ import { logAudit } from "@/lib/audit";
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const id = (await params).id;
+    const user = await requireAuth().catch(() => null);
+    
     const post = await prisma.post.findUnique({
       where: { id },
-      include: { author: true },
+      include: { 
+        author: true,
+        selectedPartner: true,
+        meetingRequests: {
+          include: {
+            requester: true
+          },
+          orderBy: { createdAt: 'desc' }
+        }
+      },
     });
 
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
+    let userInterest = null;
+    let userMeetingRequest = null;
+    
+    if (user) {
+      userInterest = await prisma.interest.findUnique({
+        where: { 
+          postId_userId: { 
+            postId: id, 
+            userId: user.id 
+          } 
+        }
+      });
+      
+      userMeetingRequest = await prisma.meetingRequest.findFirst({
+        where: { 
+          postId: id, 
+          requesterId: user.id 
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+    }
+
     return NextResponse.json({
       ...post,
       author: sanitizeUser(post.author),
-      requiredExpertise: JSON.parse(post.requiredExpertise || "[]"),
+      selectedPartner: post.selectedPartner ? sanitizeUser(post.selectedPartner) : null,
+      requiredExpertise: typeof post.requiredExpertise === "string" 
+        ? JSON.parse(post.requiredExpertise || "[]") 
+        : (Array.isArray(post.requiredExpertise) ? post.requiredExpertise : []),
+      currentUserInteraction: {
+        interest: userInterest,
+        meetingRequest: userMeetingRequest ? {
+          ...userMeetingRequest,
+          proposedSlots: JSON.parse(userMeetingRequest.proposedSlots || "[]")
+        } : null
+      },
+      meetingRequests: user && post.authorId === user.id 
+        ? post.meetingRequests.map(mr => ({
+            ...mr,
+            proposedSlots: JSON.parse(mr.proposedSlots || "[]"),
+            selectedSlot: mr.selectedSlot ? JSON.parse(mr.selectedSlot) : null,
+            requester: sanitizeUser(mr.requester)
+          }))
+        : []
     });
   } catch (error) {
+    console.error("Post detail fetch error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

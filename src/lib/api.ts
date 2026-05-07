@@ -27,6 +27,22 @@ async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+export const notificationsApi = {
+  async getAll(): Promise<Notification[]> {
+    return fetcher("/api/notifications");
+  },
+  async markAsRead(id: string): Promise<{ success: boolean }> {
+    return fetcher(`/api/notifications/${id}/read`, {
+      method: "POST",
+    });
+  },
+  async markAllAsRead(): Promise<{ success: boolean }> {
+    return fetcher("/api/notifications/read-all", {
+      method: "POST",
+    });
+  },
+};
+
 export const authApi = {
   async login(email: string, password: string): Promise<{ user: User; token: string }> {
     return fetcher("/api/auth/login", {
@@ -124,6 +140,13 @@ export const postsApi = {
     return fetcher(`/api/posts/${postId}/interests`);
   },
 
+  async selectPartner(postId: string, partnerId: string): Promise<Post> {
+    return fetcher(`/api/posts/${postId}/partner`, {
+      method: "POST",
+      body: JSON.stringify({ partnerId }),
+    });
+  },
+
   async delete(id: string): Promise<{ success: boolean }> {
     return fetcher(`/api/posts/${id}`, {
       method: "DELETE",
@@ -141,6 +164,7 @@ export const meetingsApi = {
     receiverId: string;
     message: string;
     proposedSlots: { date: string; startTime: string; endTime: string }[];
+    ndaAccepted: boolean;
   }): Promise<MeetingRequest> {
     return fetcher("/api/meetings", {
       method: "POST",
@@ -190,9 +214,10 @@ export const usersApi = {
     });
   },
 
-  async deleteAccount(): Promise<{ success: boolean }> {
+  async deleteAccount(password: string): Promise<{ success: boolean }> {
     return fetcher("/api/users/profile", {
       method: "DELETE",
+      body: JSON.stringify({ password }),
     });
   },
 

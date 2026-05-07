@@ -299,31 +299,26 @@ export default function MyPostsPage() {
                       </Button>
                     </Link>
 
-                    {post.status !== "partner_found" && (
-                      <Link href={`/dashboard/edit-post/${post.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          title="Edit Post"
-                        >
-                          <Edit className="h-3.5 w-3.5" />
-                        </Button>
-                      </Link>
-                    )}
+                    <Link href={`/dashboard/edit-post/${post.id}`}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title="Edit Post"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </Button>
+                    </Link>
 
-                    {post.status !== "partner_found" &&
-                      post.status !== "expired" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-primary hover:text-primary"
-                          title="Mark as Partner Found"
-                          onClick={() => handleMarkPartnerFound(post)}
-                        >
-                          <CheckCircle className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-primary hover:text-primary"
+                      title="Quick Mark: Partner Found"
+                      onClick={() => handleMarkPartnerFound(post)}
+                    >
+                      <CheckCircle className="h-3.5 w-3.5" />
+                    </Button>
 
                     <Button
                       variant="ghost"
