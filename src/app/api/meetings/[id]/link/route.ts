@@ -5,14 +5,15 @@ import { logAudit } from "@/lib/audit";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const { meetingLink } = await req.json();
 
     const meeting = await prisma.meetingRequest.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         requester: true,
         receiver: true,
@@ -29,7 +30,7 @@ export async function POST(
     }
 
     const updatedMeeting = await prisma.meetingRequest.update({
-      where: { id: params.id },
+      where: { id },
       data: { meetingLink },
       include: {
         requester: true,

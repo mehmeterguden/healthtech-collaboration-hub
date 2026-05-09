@@ -6,11 +6,11 @@ import { requireAuth } from "@/lib/auth";
 // Deletes a conversation (MeetingRequest or Interest)
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAuth();
-    const id = params.id;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({ error: "Conversation ID is required" }, { status: 400 });

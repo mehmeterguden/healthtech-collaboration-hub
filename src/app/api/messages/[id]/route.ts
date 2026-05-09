@@ -6,11 +6,11 @@ import { requireAuth } from "@/lib/auth";
 // Deletes a message only if it belongs to the user and is less than 2 minutes old
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAuth();
-    const messageId = params.id;
+    const { id: messageId } = await params;
 
     if (!messageId) {
       return NextResponse.json({ error: "Message ID is required" }, { status: 400 });
