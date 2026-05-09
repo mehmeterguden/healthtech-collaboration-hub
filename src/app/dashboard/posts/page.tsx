@@ -9,7 +9,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/lib/store";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { FileText } from "lucide-react";
+import { FileText, ArrowUpDown } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type SortOption = "newest" | "oldest" | "most_interest" | "alphabetical" | "stage";
 
 export default function PostsPage() {
   const user = useAuthStore((s) => s.user);
@@ -19,6 +28,7 @@ export default function PostsPage() {
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [filters, setFilters] = useState({
     search: initialSearch,
     domain: "",
@@ -81,8 +91,28 @@ export default function PostsPage() {
       result = result.filter(p => p.status === filters.status);
     }
 
+    // Apply sort
+    switch (sortBy) {
+      case "newest":
+        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        break;
+      case "oldest":
+        result.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        break;
+      case "most_interest":
+        result.sort((a, b) => (b.interestCount || 0) - (a.interestCount || 0));
+        break;
+      case "alphabetical":
+        result.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case "stage":
+        const stageOrder = { idea: 0, concept_validation: 1, prototype: 2, pilot_testing: 3, pre_deployment: 4 };
+        result.sort((a, b) => (stageOrder[b.projectStage] ?? 0) - (stageOrder[a.projectStage] ?? 0));
+        break;
+    }
+
     setFilteredPosts(result);
-  }, [filters, allPosts]);
+  }, [filters, allPosts, sortBy]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -97,15 +127,19 @@ export default function PostsPage() {
       stage: "",
       status: "",
     });
+    setSortBy("newest");
   };
+
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Browse Posts</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Discover collaboration opportunities across disciplines and institutions.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Browse Posts</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Discover collaboration opportunities across disciplines and institutions.
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
@@ -150,8 +184,25 @@ export default function PostsPage() {
             </motion.div>
           ) : (
             <>
-              <div className="mb-4 text-sm text-muted-foreground">
-                {filteredPosts.length} post{filteredPosts.length !== 1 ? "s" : ""} found
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  {filteredPosts.length} post{filteredPosts.length !== 1 ? "s" : ""} found
+                </span>
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                    <SelectTrigger className="h-8 w-44 text-xs border-border/60 bg-card/50">
+                      <SelectValue placeholder="Sort by..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">Newest First</SelectItem>
+                      <SelectItem value="oldest">Oldest First</SelectItem>
+                      <SelectItem value="most_interest">Most Interest</SelectItem>
+                      <SelectItem value="alphabetical">A → Z</SelectItem>
+                      <SelectItem value="stage">Most Advanced Stage</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 {filteredPosts.map((post, i) => (
@@ -170,3 +221,4 @@ export default function PostsPage() {
     </div>
   );
 }
+

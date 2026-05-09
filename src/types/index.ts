@@ -138,3 +138,33 @@ export interface Notification {
   createdAt: string;
   linkTo: string;
 }
+
+export interface Message {
+  id: string;
+  meetingId: string;
+  senderId: string;
+  sender: User;
+  content: string;
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: string;
+  type: "meeting" | "interest_received" | "interest_sent";
+  canMessage: boolean;
+  status: string;
+  post: Post;
+  otherUser: User;
+  meetingLink?: string;
+  selectedSlot?: TimeSlot;
+  interestId?: string;
+  message?: string; // Interest message text
+  createdAt: string;
+  updatedAt: string;
+  lastMessage: {
+    content: string;
+    senderId: string;
+    senderName: string;
+    createdAt: string;
+  } | null;
+}

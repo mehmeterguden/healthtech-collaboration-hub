@@ -7,10 +7,19 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Activity, ArrowRight, Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Activity, ArrowRight, Eye, EyeOff, Mail, Lock, Zap } from "lucide-react";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { toast } from "sonner";
+
+const DEMO_ACCOUNTS = [
+  { role: "Engineer", email: "engineer@healthai.edu", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20" },
+  { role: "Test Engineer", email: "testengineer@healthai.edu", color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20 hover:bg-cyan-500/20" },
+  { role: "Healthcare", email: "doctor@healthai.edu", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20" },
+  { role: "Test Doctor", email: "testdoctor@healthai.edu", color: "text-teal-400", bg: "bg-teal-500/10 border-teal-500/20 hover:bg-teal-500/20" },
+  { role: "Admin", email: "admin@healthai.edu", color: "text-destructive", bg: "bg-destructive/10 border-destructive/20 hover:bg-destructive/20" },
+];
+const DEMO_PASSWORD = "password123";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,6 +50,11 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fillDemo = (demoEmail: string) => {
+    setEmail(demoEmail);
+    setPassword(DEMO_PASSWORD);
   };
 
   return (
@@ -181,7 +195,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-8 text-center text-sm text-muted-foreground">
+          <p className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
             <Link
               href="/register"
@@ -190,6 +204,33 @@ export default function LoginPage() {
               Create an account
             </Link>
           </p>
+
+          {/* Demo Accounts */}
+          <div className="mt-8">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex-1 h-px bg-border/50" />
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                <Zap className="h-3 w-3" /> Demo Accounts
+              </div>
+              <div className="flex-1 h-px bg-border/50" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {DEMO_ACCOUNTS.map((acc, idx) => (
+                <button
+                  key={acc.email}
+                  type="button"
+                  onClick={() => fillDemo(acc.email)}
+                  className={`flex flex-col justify-center rounded-xl border px-3 py-2 text-left transition-all ${acc.bg} ${acc.role === "Admin" ? "col-span-2" : ""}`}
+                >
+                  <p className={`text-[10px] font-black uppercase tracking-tighter ${acc.color}`}>{acc.role}</p>
+                  <p className="text-[10px] text-muted-foreground font-mono truncate">{acc.email}</p>
+                </button>
+              ))}
+              <p className="col-span-2 text-center text-[10px] text-muted-foreground/50 pt-1">
+                All demo accounts use password: <span className="font-mono font-bold text-muted-foreground">password123</span>
+              </p>
+            </div>
+          </div>
         </motion.div>
       </div>
     </div>

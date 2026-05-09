@@ -25,11 +25,13 @@ model User {
   isActive              Boolean          @default(true)
   isEmailVerified       Boolean          @default(false)
   emailVerificationCode String?
+  profileViews          Int              @default(0)
   lastLogin             DateTime?
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
   auditLogs             AuditLog[]
   interests             Interest[]
+  messages              Message[]
   receivedRequests      MeetingRequest[] @relation("ReceivedRequests")
   sentRequests          MeetingRequest[] @relation("SentRequests")
   notifications         Notification[]
@@ -89,6 +91,7 @@ model MeetingRequest {
   meetingLink   String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  messages      Message[]
   receiver      User     @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
   requester     User     @relation("SentRequests", fields: [requesterId], references: [id], onDelete: Cascade)
   post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -118,4 +121,14 @@ model AuditLog {
   ipAddress    String?
   timestamp    DateTime @default(now())
   user         User?    @relation(fields: [userId], references: [id])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  meetingId  String
+  senderId   String
+  content    String
+  createdAt  DateTime @default(now())
+  meeting    MeetingRequest @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  sender     User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
 }

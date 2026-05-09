@@ -8,6 +8,8 @@ import {
   DashboardStats,
   Notification,
   PostStatus,
+  Message,
+  Conversation,
 } from "@/types";
 
 async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
@@ -196,6 +198,12 @@ export const meetingsApi = {
       method: "POST",
     });
   },
+  async updateLink(id: string, meetingLink: string): Promise<MeetingRequest> {
+    return fetcher(`/api/meetings/${id}/link`, {
+      method: "POST",
+      body: JSON.stringify({ meetingLink }),
+    });
+  },
 };
 
 export const usersApi = {
@@ -282,5 +290,32 @@ export const adminApi = {
 
   async exportLogs(): Promise<{ downloadUrl: string }> {
     return fetcher("/api/admin/logs/export");
+  },
+};
+
+export const messagesApi = {
+  async getConversations(): Promise<Conversation[]> {
+    return fetcher("/api/messages/conversations");
+  },
+
+  async getMessages(meetingId: string): Promise<Message[]> {
+    return fetcher(`/api/messages?meetingId=${meetingId}`);
+  },
+
+  async sendMessage(meetingId: string, content: string): Promise<Message> {
+    return fetcher("/api/messages", {
+      method: "POST",
+      body: JSON.stringify({ meetingId, content }),
+    });
+  },
+  async deleteMessage(id: string): Promise<{ success: boolean }> {
+    return fetcher(`/api/messages/${id}`, {
+      method: "DELETE",
+    });
+  },
+  async deleteConversation(id: string): Promise<{ success: boolean }> {
+    return fetcher(`/api/messages/conversations/${id}`, {
+      method: "DELETE",
+    });
   },
 };

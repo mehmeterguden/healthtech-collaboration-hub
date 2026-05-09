@@ -14,19 +14,21 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { 
-  Calendar as CalendarIcon, 
   Clock, 
   Plus, 
   Trash2, 
   Send,
   CalendarDays,
-  ShieldCheck
+  ShieldCheck,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { meetingsApi } from "@/lib/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 
 interface RequestMeetingModalProps {
   postId: string;
@@ -43,39 +45,35 @@ interface Slot {
   endTime: string;
 }
 
-export function RequestMeetingModal({
-  postId,
-  receiverId,
-  open,
+export function RequestMeetingModal({ 
+  postId, 
+  receiverId, 
+  open, 
   onOpenChange,
-  onSuccess,
+  onSuccess 
 }: RequestMeetingModalProps) {
-  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("Hi! I'd like to discuss a potential collaboration on your project.");
   const [slots, setSlots] = useState<Slot[]>([
     { id: "1", date: "", startTime: "10:00", endTime: "11:00" }
   ]);
   const [ndaAccepted, setNdaAccepted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   const addSlot = () => {
-    if (slots.length >= 3) {
-      toast.error("You can suggest up to 3 time slots.");
-      return;
-    }
-    setSlots([
-      ...slots,
-      { 
+    if (slots.length < 3) {
+      setSlots([...slots, { 
         id: Math.random().toString(36).substr(2, 9), 
         date: "", 
         startTime: "10:00", 
         endTime: "11:00" 
-      }
-    ]);
+      }]);
+    }
   };
 
   const removeSlot = (id: string) => {
-    if (slots.length <= 1) return;
-    setSlots(slots.filter(s => s.id !== id));
+    if (slots.length > 1) {
+      setSlots(slots.filter(s => s.id !== id));
+    }
   };
 
   const updateSlot = (id: string, field: keyof Slot, value: string) => {
@@ -83,233 +81,203 @@ export function RequestMeetingModal({
   };
 
   const handleSubmit = async () => {
-    if (!message.trim()) {
-      toast.error("Please add a message to your request.");
-      return;
-    }
-
-    const invalidSlots = slots.some(s => !s.date || !s.startTime || !s.endTime);
-    if (invalidSlots) {
-      toast.error("Please fill in all date and time fields.");
-      return;
-    }
-
     if (!ndaAccepted) {
-      toast.error("You must accept the Non-Disclosure Agreement (NDA) to proceed.");
+      toast.error("Please accept the confidentiality agreement");
       return;
     }
 
-    setSubmitting(true);
+    const invalidSlot = slots.find(s => !s.date || !s.startTime || !s.endTime);
+    if (invalidSlot) {
+      toast.error("Please fill in all slot details");
+      return;
+    }
+
+    setLoading(true);
     try {
       await meetingsApi.create({
         postId,
         receiverId,
         message,
-        proposedSlots: slots.map(({ date, startTime, endTime }) => ({
-          date,
-          startTime,
-          endTime,
+        proposedSlots: slots.map(s => ({
+          date: s.date,
+          startTime: s.startTime,
+          endTime: s.endTime,
         })),
         ndaAccepted: true,
       });
-      toast.success("Meeting request sent successfully!");
+      toast.success("Meeting request sent!");
       onOpenChange(false);
-      setMessage("");
-      setNdaAccepted(false);
-      setSlots([{ id: "1", date: "", startTime: "10:00", endTime: "11:00" }]);
-      if (onSuccess) onSuccess();
+      onSuccess?.();
     } catch (error) {
-      toast.error("Failed to send meeting request.");
+      toast.error("Failed to send request");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] overflow-hidden p-0 rounded-2xl border-border bg-card">
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-              <CalendarDays className="h-4 w-4" />
-            </div>
-            Request a Meeting
-          </DialogTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            Propose a few time slots. The other person will choose one to confirm.
-          </p>
-        </DialogHeader>
-
-        <div className="p-6 space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="message" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Personal Message
-            </Label>
-            <Textarea
-              id="message"
-              placeholder="Hi! I'd like to discuss the project details with you..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="min-h-20 bg-accent/30 border-border focus:ring-1 ring-primary/20 rounded-xl resize-none"
-            />
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Proposed Time Slots
-              </Label>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="sm" 
-                onClick={addSlot}
-                className="h-7 text-[10px] font-bold text-primary hover:bg-primary/5 gap-1 rounded-full"
-                disabled={slots.length >= 3}
-              >
-                <Plus className="h-3 w-3" />
-                ADD SLOT
-              </Button>
-            </div>
-
-            <div className="space-y-3">
-              <AnimatePresence initial={false}>
-                {slots.map((slot, index) => (
-                  <motion.div
-                    key={slot.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 10 }}
-                    className="relative group p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:border-primary/40 transition-all duration-300"
-                  >
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary/30 transition-colors">
-                          <CalendarIcon className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <Input
-                            type="date"
-                            value={slot.date}
-                            onChange={(e) => updateSlot(slot.id, "date", e.target.value)}
-                            className="h-10 bg-slate-950/50 border-white/10 rounded-xl text-xs focus:ring-primary/20"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary/30 transition-colors">
-                          <Clock className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex items-center gap-2 flex-1">
-                          <Input
-                            type="time"
-                            value={slot.startTime}
-                            onChange={(e) => updateSlot(slot.id, "startTime", e.target.value)}
-                            className="h-10 bg-slate-950/50 border-white/10 rounded-xl text-xs focus:ring-primary/20"
-                          />
-                          <span className="text-muted-foreground text-xs">—</span>
-                          <Input
-                            type="time"
-                            value={slot.endTime}
-                            onChange={(e) => updateSlot(slot.id, "endTime", e.target.value)}
-                            className="h-10 bg-slate-950/50 border-white/10 rounded-xl text-xs focus:ring-primary/20"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {slots.length > 1 && (
-                      <button
-                        onClick={() => removeSlot(slot.id)}
-                        className="absolute -right-2 -top-2 h-7 w-7 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white shadow-lg"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-4">
-            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="nda-accept" className="text-sm font-black text-white cursor-pointer uppercase tracking-tight">
-                  Accept NDA
-                </Label>
-                <Switch 
-                  id="nda-accept" 
-                  checked={ndaAccepted}
-                  onCheckedChange={setNdaAccepted}
-                />
+      <DialogContent className="max-w-2xl bg-[#0B0F1A] border-white/5 p-0 overflow-hidden rounded-[2.5rem] shadow-2xl">
+        <div className="bg-gradient-to-br from-primary/10 via-transparent to-transparent p-8">
+          <DialogHeader className="mb-8">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="h-12 w-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/20">
+                <CalendarDays className="h-6 w-6 text-primary" />
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                I agree to maintain confidentiality regarding the sensitive project details.{" "}
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <button className="text-primary font-bold hover:underline">View Details</button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px] rounded-2xl">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2">
-                        <ShieldCheck className="h-5 w-5 text-primary" />
-                        Non-Disclosure Agreement
-                      </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4 text-sm text-muted-foreground leading-relaxed">
-                      <p>
-                        This Non-Disclosure Agreement (NDA) ensures that all parties involved in the collaboration request for the Health AI Platform agree to maintain the strict confidentiality of the project ideas, technical specifications, and clinical data shared.
-                      </p>
-                      <p>
-                        By accepting, you agree not to disclose, share, or use any proprietary information for purposes other than the proposed collaboration without explicit written consent from the project owner.
-                      </p>
-                      <p className="font-semibold text-slate-900">
-                        Key terms include:
-                      </p>
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>Protection of sensitive medical/technical IP</li>
-                        <li>No unauthorized copying or distribution</li>
-                        <li>Agreement valid for 3 years from today</li>
-                      </ul>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </p>
+              <div>
+                <DialogTitle className="text-2xl font-bold text-white tracking-tight">Request a Meeting</DialogTitle>
+                <p className="text-slate-400 text-sm">Propose a few time slots for a brief introductory call.</p>
+              </div>
             </div>
+          </DialogHeader>
+
+          <div className="space-y-8">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Introduction Message</Label>
+              </div>
+              <Textarea 
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Briefly explain why you're interested..."
+                className="min-h-[100px] bg-white/[0.03] border-white/5 rounded-2xl focus:ring-primary/20 focus:border-primary/30 transition-all text-white placeholder:text-slate-600 p-4"
+              />
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Proposed Time Slots</Label>
+                </div>
+                <Button 
+                  onClick={addSlot} 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 px-3 rounded-xl text-primary hover:bg-primary/10 font-bold text-[10px] gap-1.5"
+                  disabled={slots.length >= 3}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  ADD SLOT
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <AnimatePresence initial={false}>
+                  {slots.map((slot, index) => (
+                    <motion.div
+                      key={slot.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="group relative bg-white/[0.02] border border-white/5 rounded-[2rem] p-4 hover:border-primary/20 transition-all duration-300"
+                    >
+                      <div className="flex flex-col md:flex-row gap-6">
+                        {/* Slot Number Indicator */}
+                        <div className="hidden md:flex flex-col items-center justify-center w-14 bg-white/5 rounded-2xl border border-white/5">
+                          <span className="text-[9px] font-black text-slate-500 uppercase leading-none mb-1">Slot</span>
+                          <span className="text-xl font-black text-white leading-none">{index + 1}</span>
+                        </div>
+
+                        <div className="flex-1 space-y-4">
+                          <DatePicker
+                            date={slot.date ? new Date(slot.date) : undefined}
+                            setDate={(d) => updateSlot(slot.id, "date", d ? format(d, "yyyy-MM-dd") : "")}
+                            placeholder="Pick a date"
+                            label="Suggested Date"
+                          />
+                          
+                          <FieldGroup className="flex-row gap-4">
+                            <Field className="flex-1">
+                              <FieldLabel className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                <Clock className="h-3 w-3" /> Start Time
+                              </FieldLabel>
+                              <Input
+                                type="time"
+                                value={slot.startTime}
+                                onChange={(e) => updateSlot(slot.id, "startTime", e.target.value)}
+                                className="h-11 bg-white/[0.03] border-white/5 rounded-xl text-center font-bold text-white focus:ring-primary/20 appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
+                              />
+                            </Field>
+                            <Field className="flex-1">
+                              <FieldLabel className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                <Clock className="h-3 w-3" /> End Time
+                              </FieldLabel>
+                              <Input
+                                type="time"
+                                value={slot.endTime}
+                                onChange={(e) => updateSlot(slot.id, "endTime", e.target.value)}
+                                className="h-11 bg-white/[0.03] border-white/5 rounded-xl text-center font-bold text-white focus:ring-primary/20 appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
+                              />
+                            </Field>
+                          </FieldGroup>
+                        </div>
+
+                        {slots.length > 1 && (
+                          <div className="flex md:flex-col items-center justify-center gap-2">
+                            <button
+                              onClick={() => removeSlot(slot.id)}
+                              className="h-10 w-10 flex items-center justify-center text-slate-600 hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-all border border-white/5 group-hover:border-destructive/20"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            <motion.div 
+              whileHover={{ scale: 1.01 }}
+              className="p-5 bg-primary/5 border border-primary/10 rounded-3xl flex items-center justify-between gap-6"
+            >
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/20">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">Accept NDA</h4>
+                  <p className="text-[11px] text-slate-400">I agree to maintain confidentiality regarding project details.</p>
+                </div>
+              </div>
+              <Switch 
+                checked={ndaAccepted}
+                onCheckedChange={setNdaAccepted}
+                className="data-[state=checked]:bg-primary"
+              />
+            </motion.div>
           </div>
         </div>
 
-        <DialogFooter className="p-6 bg-accent/10 border-t border-border mt-2">
+        <div className="p-8 bg-black/20 border-t border-white/5 flex items-center justify-end gap-4">
           <Button 
             variant="ghost" 
             onClick={() => onOpenChange(false)}
-            className="rounded-xl font-semibold text-xs"
+            className="rounded-2xl px-6 text-slate-400 hover:text-white transition-colors"
           >
             Cancel
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={submitting}
-            className="rounded-xl px-6 font-bold text-xs gap-2 shadow-lg shadow-primary/20 glow"
+            disabled={loading}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl px-8 h-12 gap-2 shadow-lg shadow-primary/20 transition-all"
           >
-            {submitting ? (
-              <>
-                <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Sending...
-              </>
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                SENDING...
+              </span>
             ) : (
               <>
-                <Send className="h-3.5 w-3.5" />
-                Send Meeting Request
+                <Send className="h-4 w-4" />
+                SEND MEETING REQUEST
               </>
             )}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -24,8 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Search, Ban, CheckCircle, Mail, Building2, Eye, Calendar, User as UserIcon, Activity } from "lucide-react";
+import { Search, Ban, CheckCircle, Mail, Building2, Eye, Calendar, User as UserIcon, Activity, ArrowUpDown } from "lucide-react";
 import { format } from "date-fns";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -58,6 +59,7 @@ export default function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [viewUser, setViewUser] = useState<User | null>(null);
+  const [sortBy, setSortBy] = useState("newest");
 
   useEffect(() => {
     async function load() {
@@ -114,6 +116,17 @@ export default function AdminUsersPage() {
     return matchSearch && matchRole && matchStatus && matchDate;
   });
 
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case "newest": return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case "oldest": return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case "alphabetical": return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+      case "institution": return (a.institution || "").localeCompare(b.institution || "");
+      case "profile": return (b.profileCompleteness || 0) - (a.profileCompleteness || 0);
+      default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -162,28 +175,14 @@ export default function AdminUsersPage() {
           </SelectContent>
         </Select>
 
-        <Select
-          value={selectedDate || "all"}
-          onValueChange={(v) => setSelectedDate(v === "all" ? "" : v)}
-        >
-          <SelectTrigger className="w-48 h-9 bg-card border-border text-foreground">
-            <div className="flex items-center gap-2 truncate">
-              <Calendar className="h-4 w-4 text-primary" />
-              <SelectValue placeholder="Registration Date" />
-            </div>
-          </SelectTrigger>
-          <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-            <SelectItem value="all">All Dates</SelectItem>
-            {Array.from(new Set(users.map(u => format(new Date(u.createdAt), "yyyy-MM-dd"))))
-              .sort((a, b) => b.localeCompare(a))
-              .map(date => (
-                <SelectItem key={date} value={date}>
-                  {format(new Date(date), "MMM d, yyyy")}
-                </SelectItem>
-              ))
-            }
-          </SelectContent>
-        </Select>
+        <div className="w-56">
+          <DatePicker
+            date={selectedDate ? new Date(selectedDate) : undefined}
+            setDate={(d) => setSelectedDate(d ? format(d, "yyyy-MM-dd") : "")}
+            placeholder="Registration Date"
+            label=""
+          />
+        </div>
 
         {selectedDate && (
           <Button 
@@ -195,6 +194,21 @@ export default function AdminUsersPage() {
             Clear Date
           </Button>
         )}
+        <div className="flex items-center gap-2 ml-auto">
+          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="h-9 w-44 text-xs">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="alphabetical">A → Z (Name)</SelectItem>
+              <SelectItem value="institution">Institution</SelectItem>
+              <SelectItem value="profile">Profile Completeness</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <motion.div
@@ -222,7 +236,7 @@ export default function AdminUsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((user) => (
+              {sorted.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">

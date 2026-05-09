@@ -19,8 +19,8 @@ export async function GET() {
       prisma.user.count(),
     ]);
 
-    // Profile views based on a combination of user ID hash and platform activity
-    const profileViews = (parseInt(user.id.substring(0, 4), 36) % 150) + (totalActivePosts * 5) + 42;
+    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+    const profileViews = dbUser?.profileViews || 0;
 
     return NextResponse.json({
       activePosts: totalActivePosts,

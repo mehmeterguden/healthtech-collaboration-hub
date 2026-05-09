@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { postsApi, meetingsApi } from "@/lib/api";
+import { postsApi, meetingsApi, messagesApi } from "@/lib/api";
 import { Post, Interest } from "@/types";
 import { PostStatusBadge } from "@/components/posts/post-status-badge";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ import {
   Edit,
   Activity,
   CalendarCheck,
+  Trash2,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { RequestMeetingModal } from "@/components/meetings/request-meeting-modal";
@@ -181,6 +182,20 @@ export default function PostDetailPage() {
       toast.error(error.message || "Failed to decline meeting");
     } finally {
       setProcessingMeeting(null);
+    }
+  };
+
+  const handleDeleteInterest = async (interestId: string) => {
+    if (!confirm("Are you sure you want to remove this interest request?")) return;
+    try {
+      setSubmitting(true);
+      await messagesApi.deleteConversation(`interest-in-${interestId}`);
+      setInterests((prev) => prev.filter((i) => i.id !== interestId));
+      toast.success("Interest request removed");
+    } catch {
+      toast.error("Failed to remove interest");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -646,20 +661,43 @@ export default function PostDetailPage() {
                     {interest.message}
                   </p>
 
-                  {post.status !== "partner_found" && (
-                    <div className="mt-4 flex justify-end">
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Link href={`/dashboard/messages?meetingId=interest-in-${interest.id}`}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 gap-1.5 text-primary hover:bg-primary/10"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          Message
+                        </Button>
+                      </Link>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1.5 text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteInterest(interest.id)}
+                        disabled={submitting}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Remove
+                      </Button>
+                    </div>
+
+                    {post.status !== "partner_found" && (
                       <Button
                         size="sm"
                         variant="outline"
-                        className="gap-1.5 border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground group"
+                        className="h-8 gap-1.5 border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground group"
                         onClick={() => handleSelectPartner(interest.userId, `${interest.user.firstName} ${interest.user.lastName}`)}
                         disabled={submitting}
                       >
                         <CheckCircle className="h-3.5 w-3.5" />
                         Partner with this user
                       </Button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
             ))}
           </div>
@@ -788,19 +826,27 @@ export default function PostDetailPage() {
                                 variant="ghost" 
                                 size="sm" 
                                 className="h-7 text-[10px] font-bold text-slate-400 hover:text-white"
-                                onClick={() => {
+                                onClick={async () => {
                                   const newLink = prompt("Update meeting link:", mr.meetingLink || "");
-                                  if (newLink !== null) toast.success("Link updated!");
+                                  if (newLink !== null && newLink !== mr.meetingLink) {
+                                    try {
+                                      await meetingsApi.updateLink(mr.id, newLink);
+                                      toast.success("Link updated!");
+                                      window.location.reload();
+                                    } catch {
+                                      toast.error("Failed to update link");
+                                    }
+                                  }
                                 }}
                               >
                                 Edit
                               </Button>
                             </div>
                           ) : (
-                            <p className="text-xs text-slate-500 italic flex items-center gap-2">
+                            <div className="text-xs text-slate-500 italic flex items-center gap-2">
                               <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
                               Waiting for meeting link
-                            </p>
+                            </div>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -818,12 +864,20 @@ export default function PostDetailPage() {
                                 variant="default" 
                                 size="sm" 
                                 className="h-9 text-[11px] font-black uppercase tracking-tight bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 px-4"
-                                onClick={() => {
+                                onClick={async () => {
                                   const newLink = prompt("Enter meeting link (Zoom, Google Meet, etc.):");
-                                  if (newLink) toast.success("Link set and shared!");
+                                  if (newLink) {
+                                    try {
+                                      await meetingsApi.updateLink(mr.id, newLink);
+                                      toast.success("Meeting link added!");
+                                      window.location.reload();
+                                    } catch {
+                                      toast.error("Failed to add link");
+                                    }
+                                  }
                                 }}
                               >
-                                Set Meeting Link
+                                Add Link
                               </Button>
                             </>
                           )}

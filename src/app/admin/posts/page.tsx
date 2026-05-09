@@ -30,8 +30,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Search, Trash2, Eye, AlertTriangle } from "lucide-react";
+import { Search, Trash2, Eye, AlertTriangle, ArrowUpDown, Calendar } from "lucide-react";
 import { format } from "date-fns";
+import { DatePicker } from "@/components/ui/date-picker";
 
 export default function AdminPostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -42,6 +43,7 @@ export default function AdminPostsPage() {
   const [selectedDate, setSelectedDate] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Post | null>(null);
   const [viewPost, setViewPost] = useState<Post | null>(null);
+  const [sortBy, setSortBy] = useState("newest");
 
   useEffect(() => {
     async function load() {
@@ -83,8 +85,17 @@ export default function AdminPostsPage() {
     }
 
     return matchSearch && matchStatus && matchDomain;
-  }).sort((a, b) => {
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case "newest": return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case "oldest": return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case "most_interest": return (b.interestCount || 0) - (a.interestCount || 0);
+      case "alphabetical": return a.title.localeCompare(b.title);
+      case "author": return `${a.author.firstName}`.localeCompare(`${b.author.firstName}`);
+      default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
   });
 
   const uniqueDomains = Array.from(new Set(posts.map((p) => p.domain)));
@@ -142,12 +153,14 @@ export default function AdminPostsPage() {
           </SelectContent>
         </Select>
 
-        <Input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="w-40 h-9"
-        />
+        <div className="w-52">
+          <DatePicker
+            date={selectedDate ? new Date(selectedDate) : undefined}
+            setDate={(d) => setSelectedDate(d ? format(d, "yyyy-MM-dd") : "")}
+            placeholder="Filter by date"
+            label=""
+          />
+        </div>
         {selectedDate && (
           <Button 
             variant="ghost" 
@@ -158,6 +171,21 @@ export default function AdminPostsPage() {
             Clear Date
           </Button>
         )}
+        <div className="flex items-center gap-2 ml-auto">
+          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="h-9 w-44 text-xs">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="most_interest">Most Interest</SelectItem>
+              <SelectItem value="alphabetical">A → Z (Title)</SelectItem>
+              <SelectItem value="author">Author Name</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <motion.div
@@ -185,7 +213,7 @@ export default function AdminPostsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((post) => (
+              {sorted.map((post) => (
                 <TableRow key={post.id}>
                   <TableCell className="font-medium max-w-48 truncate">
                     {post.title}

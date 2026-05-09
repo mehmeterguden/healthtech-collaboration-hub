@@ -23,8 +23,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Search, Download, AlertTriangle, CheckCircle, Calendar } from "lucide-react";
+import { Search, Download, AlertTriangle, CheckCircle, Calendar, ArrowUpDown } from "lucide-react";
 import { format } from "date-fns";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const actionLabels: Record<string, string> = {
   login: "Login",
@@ -64,6 +65,7 @@ export default function AdminLogsPage() {
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
 
   useEffect(() => {
     async function load() {
@@ -112,6 +114,16 @@ export default function AdminLogsPage() {
     return matchSearch && matchDate;
   });
 
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case "newest": return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      case "oldest": return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+      case "user": return a.userName.localeCompare(b.userName);
+      case "action": return a.actionType.localeCompare(b.actionType);
+      default: return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    }
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -158,28 +170,14 @@ export default function AdminLogsPage() {
           </SelectContent>
         </Select>
 
-        <Select
-          value={selectedDate || "all"}
-          onValueChange={(v) => setSelectedDate(v === "all" ? "" : v)}
-        >
-          <SelectTrigger className="w-48 h-9 bg-card border-border text-foreground">
-            <div className="flex items-center gap-2 truncate">
-              <Calendar className="h-4 w-4 text-primary" />
-              <SelectValue placeholder="Log Date" />
-            </div>
-          </SelectTrigger>
-          <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-            <SelectItem value="all">All Dates</SelectItem>
-            {Array.from(new Set(logs.map(l => format(new Date(l.timestamp), "yyyy-MM-dd"))))
-              .sort((a, b) => b.localeCompare(a))
-              .map(date => (
-                <SelectItem key={date} value={date}>
-                  {format(new Date(date), "MMM d, yyyy")}
-                </SelectItem>
-              ))
-            }
-          </SelectContent>
-        </Select>
+        <div className="w-56">
+          <DatePicker
+            date={selectedDate ? new Date(selectedDate) : undefined}
+            setDate={(d) => setSelectedDate(d ? format(d, "yyyy-MM-dd") : "")}
+            placeholder="Filter by date"
+            label=""
+          />
+        </div>
 
         {selectedDate && (
           <Button 
@@ -191,6 +189,20 @@ export default function AdminLogsPage() {
             Clear Date
           </Button>
         )}
+        <div className="flex items-center gap-2 ml-auto">
+          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="h-9 w-44 text-xs">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="user">User Name</SelectItem>
+              <SelectItem value="action">Action Type</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <motion.div
@@ -218,7 +230,7 @@ export default function AdminLogsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((log) => (
+              {sorted.map((log) => (
                 <TableRow key={log.id}>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {format(

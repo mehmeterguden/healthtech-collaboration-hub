@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -437,14 +439,11 @@ export default function EditPostPage() {
                     <Calendar className="h-3.5 w-3.5" />
                     Expiry Date
                   </Label>
-                  <Input
-                    id="edit-expiry"
-                    type="date"
-                    value={form.expiryDate}
-                    onChange={(e) =>
-                      updateForm("expiryDate", e.target.value)
-                    }
-                    className="h-11"
+                  <DatePicker
+                    date={form.expiryDate ? new Date(form.expiryDate) : undefined}
+                    setDate={(d) => updateForm("expiryDate", d ? format(d, "yyyy-MM-dd") : "")}
+                    placeholder="Select expiry date"
+                    label="Expiry Date"
                   />
                 </div>
 

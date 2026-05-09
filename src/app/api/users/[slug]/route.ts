@@ -6,8 +6,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   try {
     const slug = (await params).slug;
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.update({
       where: { slug },
+      data: { profileViews: { increment: 1 } },
       include: {
         posts: {
           orderBy: { createdAt: "desc" },

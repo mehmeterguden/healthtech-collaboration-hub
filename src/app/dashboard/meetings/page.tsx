@@ -77,6 +77,7 @@ function MeetingCard({
   onDecline,
   onCancel,
   onComplete,
+  onUpdateLink,
 }: {
   meeting: MeetingRequest;
   tab: Tab;
@@ -85,6 +86,7 @@ function MeetingCard({
   onDecline: (id: string) => void;
   onCancel: (id: string) => void;
   onComplete: (id: string) => void;
+  onUpdateLink: (id: string, link: string) => void;
 }) {
   const isReceiver = meeting.receiverId === userId;
   const other = isReceiver ? meeting.requester : meeting.receiver;
@@ -162,11 +164,17 @@ function MeetingCard({
             {showCustom ? "Hide custom slot" : "+ Propose a different time"}
           </button>
           {showCustom && (
-            <div className="mt-2 flex gap-2">
-              <input type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)}
-                className="flex-1 bg-white/[0.04] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary/40" />
-              <input type="time" value={customTime} onChange={(e) => setCustomTime(e.target.value)}
-                className="w-24 bg-white/[0.04] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary/40" />
+            <div className="mt-3">
+              <DatePicker 
+                date={customDate ? new Date(customDate) : undefined} 
+                setDate={(d) => setCustomDate(d ? format(d, "yyyy-MM-dd") : "")}
+                showTime
+                time={customTime}
+                setTime={setCustomTime}
+                label="Custom Slot"
+                placeholder="Pick a date"
+                className="flex-col sm:flex-row"
+              />
             </div>
           )}
         </div>
@@ -265,6 +273,14 @@ function MeetingCard({
               </Button>
               <Button variant="ghost" size="sm"
                 className="h-8 px-3 text-[10px] font-bold text-primary/70 hover:bg-primary/10 hover:text-primary"
+                onClick={() => {
+                  const link = prompt("Enter meeting link (Zoom, Meet, etc.):", meeting.meetingLink || "");
+                  if (link !== null) onUpdateLink(meeting.id, link);
+                }}>
+                <Video className="h-3 w-3 mr-1" />{meeting.meetingLink ? "Update Link" : "Add Link"}
+              </Button>
+              <Button variant="ghost" size="sm"
+                className="h-8 px-3 text-[10px] font-bold text-primary/70 hover:bg-primary/10 hover:text-primary"
                 onClick={() => onComplete(meeting.id)}>
                 <CheckCircle2 className="h-3 w-3 mr-1" />Mark Done
               </Button>
@@ -341,6 +357,10 @@ export default function MeetingsPage() {
   const handleComplete = async (id: string) => {
     try { update(await meetingsApi.complete(id)); toast.success("Meeting marked as completed!"); }
     catch { toast.error("Failed to mark complete"); }
+  };
+  const handleUpdateLink = async (id: string, link: string) => {
+    try { update(await meetingsApi.updateLink(id, link)); toast.success("Meeting link updated!"); }
+    catch { toast.error("Failed to update link"); }
   };
 
   // stats
@@ -464,7 +484,8 @@ export default function MeetingsPage() {
               {tabItems.map((m) => (
                 <MeetingCard key={m.id} meeting={m} tab={activeTab} userId={user!.id}
                   onAccept={handleAccept} onDecline={handleDecline}
-                  onCancel={handleCancel} onComplete={handleComplete} />
+                  onCancel={handleCancel} onComplete={handleComplete} 
+                  onUpdateLink={handleUpdateLink} />
               ))}
             </AnimatePresence>
           </motion.div>

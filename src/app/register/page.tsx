@@ -174,7 +174,7 @@ export default function RegisterPage() {
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="reg-email">Email Address</Label>
+                    <Label htmlFor="reg-email">Email Address <span className="text-destructive">*</span></Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -189,7 +189,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="reg-password">Password</Label>
+                    <Label htmlFor="reg-password">Password <span className="text-destructive">*</span></Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -211,7 +211,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="reg-confirm">Confirm Password</Label>
+                    <Label htmlFor="reg-confirm">Confirm Password <span className="text-destructive">*</span></Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -301,7 +301,7 @@ export default function RegisterPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
+                      <Label htmlFor="firstName">First Name <span className="text-destructive">*</span></Label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -314,7 +314,7 @@ export default function RegisterPage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
+                      <Label htmlFor="lastName">Last Name <span className="text-destructive">*</span></Label>
                       <Input
                         id="lastName"
                         placeholder="Smith"
@@ -326,7 +326,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="institution">Institution</Label>
+                    <Label htmlFor="institution">Institution <span className="text-destructive">*</span></Label>
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input

@@ -18,6 +18,8 @@ import {
 import { postsApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   ArrowLeft,
   Send,
@@ -386,12 +388,11 @@ export default function CreatePostPage() {
                     <Calendar className="h-3.5 w-3.5" />
                     Expiry Date
                   </Label>
-                  <Input
-                    id="expiry"
-                    type="date"
-                    value={form.expiryDate}
-                    onChange={(e) => updateForm("expiryDate", e.target.value)}
-                    className="h-11"
+                  <DatePicker
+                    date={form.expiryDate ? new Date(form.expiryDate) : undefined}
+                    setDate={(d) => updateForm("expiryDate", d ? format(d, "yyyy-MM-dd") : "")}
+                    placeholder="Select expiry date"
+                    label="Expiry Date"
                   />
                 </div>
 
