@@ -205,6 +205,7 @@ async function main() {
       country: "Global",
       status: "meeting_scheduled",
       interestCount: 3,
+      createdAt: new Date(Date.now() - (Math.random() * 48 * 60 * 60 * 1000)), // Random within 48h
       expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       autoClose: true,
     },
@@ -228,6 +229,7 @@ async function main() {
       country: "Global",
       status: "active",
       interestCount: 5,
+      createdAt: new Date(Date.now() - (Math.random() * 24 * 60 * 60 * 1000)), // Random within 24h
       expiryDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
       autoClose: false,
     },
@@ -251,6 +253,7 @@ async function main() {
       country: "Global",
       status: "active",
       interestCount: 2,
+      createdAt: new Date(Date.now() - (Math.random() * 12 * 60 * 60 * 1000)), // Random within 12h
       expiryDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
       autoClose: false,
     },
@@ -275,6 +278,7 @@ async function main() {
       country: "Global",
       status: "active",
       interestCount: 4,
+      createdAt: new Date(Date.now() - (Math.random() * 72 * 60 * 60 * 1000)), // Random within 72h
       expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       autoClose: true,
     },
@@ -333,6 +337,7 @@ async function main() {
         country: "Global",
         status: p.status,
         interestCount: Math.floor(Math.random() * 8),
+        createdAt: new Date(Date.now() - (Math.random() * 10 * 24 * 60 * 60 * 1000)), // Random within 10 days
         expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         autoClose: false,
       },
