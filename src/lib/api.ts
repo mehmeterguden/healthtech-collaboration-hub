@@ -35,12 +35,12 @@ export const notificationsApi = {
   },
   async markAsRead(id: string): Promise<{ success: boolean }> {
     return fetcher(`/api/notifications/${id}/read`, {
-      method: "POST",
+      method: "PATCH",
     });
   },
   async markAllAsRead(): Promise<{ success: boolean }> {
     return fetcher("/api/notifications/read-all", {
-      method: "POST",
+      method: "PATCH",
     });
   },
 };

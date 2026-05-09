@@ -48,6 +48,24 @@ export function Topbar() {
     }
   }, [user, setNotifications]);
 
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await notificationsApi.markAsRead(id);
+      markAsRead(id);
+    } catch (err) {
+      console.error("Failed to mark as read:", err);
+    }
+  };
+
+  const handleMarkAll = async () => {
+    try {
+      await notificationsApi.markAllAsRead();
+      markAllAsRead();
+    } catch (err) {
+      console.error("Failed to mark all as read:", err);
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (search.trim()) {
@@ -100,7 +118,7 @@ export function Topbar() {
                   variant="ghost"
                   size="sm"
                   className="text-xs text-primary h-auto py-1"
-                  onClick={markAllAsRead}
+                  onClick={handleMarkAll}
                 >
                   Mark all read
                 </Button>
@@ -115,7 +133,7 @@ export function Topbar() {
                 notifications.map((n) => (
                   <button
                     key={n.id}
-                    onClick={() => markAsRead(n.id)}
+                    onClick={() => handleMarkAsRead(n.id)}
                     className="flex w-full items-start gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors hover:bg-muted/50"
                   >
                     <div
